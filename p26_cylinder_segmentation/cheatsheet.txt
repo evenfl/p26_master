@@ -1,0 +1,34 @@
+Cheatsheet for P26_cylinder_segmentation package
+
+
+Run package:
+rosrun cylinder_segmentation cylinder_segmentation
+
+View one .pcd file:
+pcl_viewer ~/catkin_ws/src/P26_cylinder_segmentation/pointclouds/cylinder.pcd
+
+View several .pcd files:
+pcl_viewer -fc 0,0,255 ~/catkin_ws/src/P26_cylinder_segmentation/pointclouds/plane.pcd -fc 0,255,0 ~/catkin_ws/src/P26_cylinder_segmentation/pointclouds/cylinder.pcd
+
+pcl_viewer -bc 255,255,255 -fc 50,80,255 -ps 3 ~/catkin_ws/src/P26_cylinder_segmentation/pointclouds/plane.pcd -fc 50,80,255 -ps 3 ~/catkin_ws/src/P26_cylinder_segmentation/pointclouds cloud_filtered3.pcd -fc 255,0,0 -ps 3.8 ~/catkin_ws/src/P26_cylinder_segmentation/pointclouds/cylinder.pcd
+
+
+
+
+
+
+
+
+Guide for å styre roboten:
+
+Starte MoveIt:
+roslaunch wp3_robots multimove.launch mode:=real
+
+Starte move_group:
+roslaunch lefty_moveit_config move_group.launch
+
+Show lefty:
+roslaunch wp3_robots P26_show_lefty.launch 
+
+Cylinder segmentation:
+rosrun cylinder_segmentation cylinder_segmentation

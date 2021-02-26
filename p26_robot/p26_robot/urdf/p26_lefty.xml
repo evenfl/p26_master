@@ -1,0 +1,6 @@
+<robot file="p26_lefty.dae">
+  <Manipulator name="p26_lefty">
+    <base>lefty_track_left</base>
+    <effector>lefty_tool</effector>
+  </Manipulator>
+</robot>

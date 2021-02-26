@@ -1,0 +1,52 @@
+<?xml version="1.0" ?>
+<robot name="p26_lefty" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:property name="prefix" value="lefty_" />
+<!--  <xacro:property name="prefix" value="" />-->
+
+  <xacro:include filename="$(find abb_irbt4004_support)/urdf/irbt4004_macro.xacro"/>
+  <xacro:abb_irbt4004 prefix="${prefix}"/>
+
+  <!-- Connecting irbt carriage to irb base-link -->
+  <joint name="${prefix}robot_interface_link" type="fixed">
+    <parent link="${prefix}carriage_interface"/>
+    <child link="${prefix}base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0" />
+  </joint>
+
+  <xacro:include filename="$(find abb_irb4400_support)/urdf/irb4400_60_macro.xacro"/>
+  <xacro:abb_irb4400_60 prefix="${prefix}"/>
+
+  <!--Tool-->
+  <link name="${prefix}tool">
+    <visual>
+    <origin xyz="0.03 -0.0625 -0.1" rpy="0 -1.57079632 0"/>
+      <geometry>
+        <mesh filename="package://p26_robot/meshes/tool0/visual/tool0.STL" scale="0.001 0.001 0.001" />
+      </geometry>
+      <xacro:material_abb_white />
+    </visual>
+    <collision>
+    <origin xyz="0.03 -0.0625 -0.1" rpy="0 -1.57079632 0"/>
+      <geometry>
+        <mesh filename="package://p26_robot/meshes/tool0/collision/tool0.STL" scale="0.001 0.001 0.001" />
+      </geometry>
+      <xacro:material_abb_white />
+    </collision>
+  </link>
+  <joint name="${prefix}tool" type="fixed">
+    <parent link="${prefix}tool0"/>
+    <child link="${prefix}tool"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Insert point must be defined by a fixed joint-->
+  <link name="world"/>
+  <joint name="${prefix}offset" type="fixed">
+    <parent link="world"/>
+    <child link="${prefix}track_left"/>
+    <origin xyz="7.000 3.6645 0.000" rpy="0 0 1.57079632"/>
+  </joint>
+
+
+</robot>
+

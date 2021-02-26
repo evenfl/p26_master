@@ -1,0 +1,6 @@
+<launch>
+<group ns="p26_lefty">
+  <node name="p26_pick_and_place" pkg="p26_pick_and_place" type="main_cpp" respawn="false" output="screen">
+  </node>
+</group>
+</launch>

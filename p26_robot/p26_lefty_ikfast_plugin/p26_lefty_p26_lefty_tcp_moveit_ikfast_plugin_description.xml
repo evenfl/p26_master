@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<library path="lib/libp26_lefty_p26_lefty_tcp_moveit_ikfast_plugin">
+  <class base_class_type="kinematics::KinematicsBase" name="p26_lefty_p26_lefty_tcp/IKFastKinematicsPlugin" type="p26_lefty_p26_lefty_tcp::IKFastKinematicsPlugin">
+    <description>IKFast61 plugin for closed-form kinematics of p26_lefty p26_lefty_tcp</description>
+  </class>
+</library>

@@ -1,0 +1,10 @@
+controller_list:
+  - name: fake_p26_lefty_tcp_controller
+    joints:
+      - lefty_joint_carriage
+      - lefty_joint_1
+      - lefty_joint_2
+      - lefty_joint_3
+      - lefty_joint_4
+      - lefty_joint_5
+      - lefty_joint_6

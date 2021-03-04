@@ -37,9 +37,9 @@ const double cylinderLength = 1.2;
 
 const float x_min = 3.0;
 const float x_max = 6.0;
-const float y_min = 2.0;
+const float y_min = 1.0;
 const float y_max = 10.0;
-const float z_min = 0.1;
+const float z_min = 0.05;
 const float z_max = 2.0;
 
 

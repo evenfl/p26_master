@@ -4,7 +4,7 @@
 
 moveit_msgs::CollisionObject addCylinder(const AddCylinderParams cylinder_params)
   {
-    moveit_msgs::PlanningScene planning_scene_interface;
+//    moveit_msgs::PlanningScene planning_scene_interface;
     // BEGIN_SUB_TUTORIAL add_cylinder
     //
     // Adding Cylinder to Planning Scene

@@ -14,57 +14,66 @@ int main(int argc, char **argv) {
   ros::Subscriber sub_com = nh.subscribe ("cylinder_com", 1, callback_com);
   ros::Subscriber sub_dirvec = nh.subscribe ("cylinder_dirvec", 1, callback_dirvec);
 
+  ros::Publisher planning_scene_plan_publisher = nh.advertise<moveit_msgs::DisplayTrajectory>("p26_lefty/move_group/display_planned_path", 1);
 
-  // MoveIt operates on sets of joints called "planning groups" and stores them in an object called
-  // the `JointModelGroup`. Throughout MoveIt the terms "planning group" and "joint model group"
-  // are used interchangably.
-  static const std::string PLANNING_GROUP = "p26_lefty_tcp";
+  //Load robot model with robot_model_loader
+  robot_model_loader::RobotModelLoader robot_model_loader("p26_lefty/robot_description");
+  robot_model::RobotModelPtr robot_model = robot_model_loader.getModel();
+  ROS_INFO("Model frame: %s", robot_model->getModelFrame().c_str());
 
-  // The :planning_interface:`MoveGroupInterface` class can be easily
-  // setup using just the name of the planning group you would like to control and plan for.
-  moveit::planning_interface::MoveGroupInterface move_group(PLANNING_GROUP);
-  const moveit::core::JointModelGroup* joint_model_group =
-        move_group.getCurrentState()->getJointModelGroup(PLANNING_GROUP);
+  planning_scene::PlanningScenePtr planning_scene_plan(new planning_scene::PlanningScene(robot_model));
 
-  moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+  //  Get robot kinematic state for lefty_tool
+  robot_state::RobotStatePtr kinematic_state(new robot_state::RobotState(robot_model));
+  const Eigen::Affine3d& end_effector_state = kinematic_state->getGlobalLinkTransform("lefty_tool0");
 
-  while (ros::ok())
+  //  Printing robot cordinates and angles for lefty_tool
+  ROS_INFO_STREAM("Translation: \n" << end_effector_state.translation() << "\n");
+  ROS_INFO_STREAM("Rotation: \n" << end_effector_state.rotation() << "\n");
+
+
+  //  Make a new planning pipeline
+  planning_pipeline::PlanningPipelinePtr planning_pipeline(
+    new planning_pipeline::PlanningPipeline(robot_model, nh, "planning_plugin", "request_adapters"));
+
+
+  planning_interface::MotionPlanRequest req;
+  planning_interface::MotionPlanResponse res;
+  geometry_msgs::PoseStamped pose;
+
+  // Define position and end effector to utilize
+  pose.header.frame_id = "lefty_tool";
+  pose.pose.position.x = 5;//point_com.x;
+  pose.pose.position.y = 6;//point_com.y;
+  pose.pose.position.z = 1;//point_com.z;
+  pose.pose.orientation.w = 1.0;
+
+  // Define tolerance for pose position and angle
+  std::vector<double> tolerance_pose(3, 0.2);
+  std::vector<double> tolerance_angle(3, 0.01);
+
+  req.group_name = "p26_lefty";
+  moveit_msgs::Constraints pose_goal =
+      kinematic_constraints::constructGoalConstraints("lefty_tool", pose, tolerance_pose, tolerance_angle);
+  req.goal_constraints.push_back(pose_goal);
+
+  // Now, call the pipeline and check whether planning was successful.
+  planning_pipeline->generatePlan(planning_scene_plan, req, res);
+  /* Check that the planning was successful */
+  if (res.error_code_.val != res.error_code_.SUCCESS)
   {
-    ros::spinOnce();
-    rate.sleep();
-    //ros::shutdown();
-
-
-    geometry_msgs::Pose target_pose1;
-    target_pose1.orientation.w = 1.0;
-    target_pose1.position.x = 5;
-    target_pose1.position.y = 5;
-    target_pose1.position.z = 1;
-    move_group.setPoseTarget(target_pose1);
-
-
-
-    moveit::core::RobotState start_state(*move_group.getCurrentState());
-    geometry_msgs::Pose start_pose2;
-    start_pose2.orientation.w = 1.0;
-    start_pose2.position.x = 0.55;
-    start_pose2.position.y = -0.05;
-    start_pose2.position.z = 0.8;
-
-    start_state.setFromIK(joint_model_group, start_pose2);
-    move_group.setStartState(start_state);
-
-    // Now we will plan to the earlier pose target from the new
-    // start state that we have just created.
-    move_group.setPoseTarget(target_pose1);
-
-    // Planning with constraints can be slow because every sample must call an inverse kinematics solver.
-    // Lets increase the planning time from the default 5 seconds to be sure the planner has enough time to succeed.
-    move_group.setPlanningTime(10.0);
-
-    std::cerr << (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-
+    ROS_ERROR("Could not compute plan successfully");
+    return 0;
   }
+  else
+  {
+    ROS_INFO("Plan computed successfully, executing in 5s");
+  }
+
+  ros::Duration(5).sleep();
+
+
+
 
   return 0;
 }

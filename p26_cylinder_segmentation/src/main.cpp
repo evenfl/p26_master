@@ -24,7 +24,7 @@ int main(int argc, char** argv)
   ros::Subscriber sub5 = nh.subscribe ("/master/jetson5/kinect_decomp", 1, callback);
   ros::Subscriber sub6 = nh.subscribe ("/master/jetson6/kinect_decomp", 1, callback);
   //ros::Publisher pub = nh.advertise<PointCloud> ("cloud_cylinder", 1);
-  ros::Publisher planning_scene_diff_publisher = nh.advertise<moveit_msgs::CollisionObject>("p26_lefty/collision_object", 1);
+  ros::Publisher planning_scene_diff_publisher = nh.advertise<moveit_msgs::CollisionObject>("collision_object", 1);
   ros::Publisher pub_com = nh.advertise<geometry_msgs::Point> ("cylinder_com", 1);
   ros::Publisher pub_dirvec = nh.advertise<geometry_msgs::Point> ("cylinder_dirvec", 1);
 
@@ -34,7 +34,7 @@ int main(int argc, char** argv)
 
   PointT point_com_avg;
   PointT dirvec_avg;
-  const int nrOfIterations = 20;
+  const int nrOfIterations = 40;
   const float deviance = 0.06;
 
   unsigned int inconsistencyCounter = 0;
@@ -126,11 +126,7 @@ int main(int argc, char** argv)
 
       cloud_cylinder = passThroughFilterSphere(cloud_cylinder, point_com, sqrt((cylinderLength/2)*(cylinderLength/2)+cylinderRadius*cylinderRadius), false);
 
-      //pcl::PCDWriter writer;
-      //writer.write ("src/P26_cylinder_segmentation/pointclouds/cylinder_filtered.pcd", *cloud_cylinder, false);
-
       counter = 0;
-      cloud_merged->clear();
       //ros::shutdown();
 
       if (iterations == 0 && point_com.x != 0.0)
@@ -188,8 +184,8 @@ int main(int argc, char** argv)
         cylinder_params.center_pt[1] = point_com_avg.y;
         cylinder_params.center_pt[2] = point_com_avg.z;
 
-        cylinder_params.height = cylinderLength*1;
-        cylinder_params.radius = cylinderRadius*1;
+        cylinder_params.height = cylinderLength*1.1;
+        cylinder_params.radius = cylinderRadius*1.1;
 
         cylinder_params.direction_vec[0] = dirvec_avg.x;
         cylinder_params.direction_vec[1] = dirvec_avg.y;
@@ -205,8 +201,14 @@ int main(int argc, char** argv)
         pub_dirvec_msg.z = dirvec_avg.z;
         pub_com.publish(pub_com_msg);
         pub_dirvec.publish(pub_dirvec_msg);
-        //ros::shutdown();
+
+//        pcl::PCDWriter writer;
+//        writer.write ("src/p26_master/p26_cylinder_segmentation/pointclouds/cylinder_filtered.pcd", *cloud_cylinder, false);
+//        writer.write ("src/p26_master/p26_cylinder_segmentation/pointclouds/cloud_merged.pcd", *cloud_merged, false);
+
+        ros::shutdown();
       }
+        cloud_merged->clear();
     }
 
   }

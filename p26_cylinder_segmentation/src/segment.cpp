@@ -142,8 +142,8 @@ pcl::PointCloud<PointT>::Ptr segment(const pcl::PointCloud<PointT>::Ptr& input, 
   seg.setNormalDistanceWeight (0.2); //0.01 works (0.1 seperated the robot from the cylinder)
   seg.setMaxIterations (10000);
   //seg.setDistanceThreshold (0.05);
-  seg.setDistanceThreshold (0.04);//0.1 works
-  seg.setRadiusLimits (cylinderDiameter/2-0.03, cylinderDiameter/2+0.03);//0.08, 0.16 works
+  seg.setDistanceThreshold (0.08);//0.1 works
+  seg.setRadiusLimits (cylinderRadius-0.03, cylinderRadius+0.03);//0.08, 0.16 works
   seg.setInputCloud (cloud_filtered2);
   seg.setInputNormals (cloud_normals2);
 

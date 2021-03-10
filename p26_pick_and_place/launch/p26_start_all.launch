@@ -1,0 +1,16 @@
+<launch>
+
+
+<!--<include file="$(find p26_pick_and_place)/launch/p26_moveit_planning_execution.launch">-->
+<!--  <arg name="mode" value="real" />-->
+<!--</include>-->
+
+<group ns="p26_lefty">
+
+  <node name="p26_cylinder_segmentation" pkg="p26_cylinder_segmentation" type="cylinder_segmentation" respawn="false" output="screen" />
+  <node name="p26_pick_and_place" pkg="p26_pick_and_place" type="p26_move.py" respawn="false" output="screen">
+  </node>
+
+</group>
+
+</launch>

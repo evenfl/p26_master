@@ -1,14 +1,9 @@
 #include "addCylinder.h"
 
-//moveit_msgs::PlanningScene addCylinder(const AddCylinderParams cylinder_params)
+
 
 moveit_msgs::CollisionObject addCylinder(const AddCylinderParams cylinder_params)
   {
-//    moveit_msgs::PlanningScene planning_scene_interface;
-    // BEGIN_SUB_TUTORIAL add_cylinder
-    //
-    // Adding Cylinder to Planning Scene
-    // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     // Define a collision object ROS message.
     moveit_msgs::CollisionObject collision_object;
     collision_object.header.frame_id = "world";
@@ -47,11 +42,7 @@ moveit_msgs::CollisionObject addCylinder(const AddCylinderParams cylinder_params
     collision_object.primitives.push_back(primitive);
     collision_object.primitive_poses.push_back(cylinder_pose);
     collision_object.operation = collision_object.ADD;
-    //planning_scene_interface.addCollisionObject(collision_object);
-    //planning_scene_interface.world.collision_objects.push_back(collision_object);
-    // END_SUB_TUTORIAL
 
-    //return planning_scene_interface;
     return collision_object;
 
   }

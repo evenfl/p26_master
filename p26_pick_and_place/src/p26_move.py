@@ -49,11 +49,53 @@ import rospy
 import moveit_commander
 import moveit_msgs.msg
 import geometry_msgs.msg
-from math import pi
+from math import pi, atan2, cos, sin, sqrt, asin
 from std_msgs.msg import String, Int64, Float32
 from moveit_commander.conversions import pose_to_list
+import numpy as np
 #from moveit_python import PlanningSceneInterface
 ## END_SUB_TUTORIAL
+
+def euler_to_quaternion(roll, pitch, yaw):
+
+        qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+        qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
+        qz = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
+        qw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+
+        return [qx, qy, qz, qw]
+
+def normalize(vec):
+    length = 0.0
+    for i in range(len(vec)):
+        length = length + vec[i]*vec[i]
+    length = sqrt(length)
+    for i in range(len(vec)):
+        vec[i] = vec[i]/length
+    return vec
+
+def vec_length(vec):
+    length = 0.0
+    for i in range(len(vec)):
+        length = length + vec[i]*vec[i]
+    length = sqrt(length)
+    return length
+
+class GraspingPointCandidate:
+    def __init__(self, theta, dirvec, v, P_com, P_eef):
+
+        # Rodrigues' rotation formula
+        w = np.cross(v,dirvec)
+
+        x1 = cos(theta)
+        x2 = sin(theta)/vec_length(w)
+
+        u = x1*v + x2*w
+
+        u = normalize(u)
+
+        self.d = vec_length([P_eef[0]-(P_com[0]+u[0]), P_eef[1]-(P_com[1]+u[1]), P_eef[2]-(P_com[2]+u[2])])
+        self.u = u
 
 def all_close(goal, actual, tolerance):
   """
@@ -202,28 +244,69 @@ class MoveGroupPickAndPlace(object):
     current_joints = self.group.get_current_joint_values()
     return all_close(joint_goal, current_joints, 0.01)
 
-  def go_to_pose_goal(self, x, y, z):
+  def go_to_pose_goal(self, x, y, z, xd, yd, zd):
     # Copy class variables to local variables to make the web tutorials more clear.
     # In practice, you should use the class variables directly unless you have a good
     # reason not to.
     group = self.group
 
-    ## BEGIN_SUB_TUTORIAL plan_to_pose
-    ##
     ## Planning to a Pose Goal
     ## ^^^^^^^^^^^^^^^^^^^^^^^
     ## We can plan a motion for this group to a desired pose for the
     ## end-effector:
 
-    pose_goal = geometry_msgs.msg.Pose()
-    pose_goal.orientation.x = 0.0
-    pose_goal.orientation.y = 0.0
-    pose_goal.orientation.z = 1.
-    pose_goal.orientation.w = 0.0
+    eef_pose = group.get_current_pose().pose
+    P_eef = [eef_pose.position.x, eef_pose.position.y, eef_pose.position.z]
+    P_com = [x,y,z]
 
-    pose_goal.position.x = x
-    pose_goal.position.y = y
-    pose_goal.position.z = z
+    D = [xd, yd, zd]
+
+    v0 = [0,0,1]
+    if zd > 0.9:
+        v0 = [1,0,0]
+
+    v1 = np.cross(D, v0)
+    v1 = normalize(v1)
+
+    a = np.array([])
+    for i in range(360):
+        a = np.append(a, GraspingPointCandidate(i*(2*np.pi)/360, D, v1, P_com, P_eef))
+
+    smallest_distance = 1000000
+    for i in range(360):
+        if a[i].d < smallest_distance:
+            smallest_distance = a[i].d
+            a_saved = a[i]
+
+    U = a_saved.u
+
+    W0 = [ -U[1], U[0], 0 ]
+    U0 = np.cross(W0, U)
+    angle_H=atan2(U[1],U[0])
+    angle_P=asin(U[2])
+    angle_B = atan2( np.dot(W0,D), np.dot(U0,D) / vec_length(U0) * vec_length(W0) )
+    print(angle_B)
+    print(angle_P)
+    print(angle_H)
+
+
+    q = euler_to_quaternion( angle_B, angle_P, np.pi+angle_H )
+    #q = euler_to_quaternion(0, np.pi/2, np.pi) # Straight down
+    #q = euler_to_quaternion(0, np.pi, np.pi) # Straight backwards and upside down
+    #q = euler_to_quaternion(0, 0, np.pi) # Straight forwards
+    #q = euler_to_quaternion(0, 0, 0) # Straight backwards
+
+    pose_goal = geometry_msgs.msg.Pose()
+    q_length = vec_length(q)
+    q = np.asarray(q)/q_length
+    pose_goal.orientation.x = q[0]
+    pose_goal.orientation.y = q[1]
+    pose_goal.orientation.z = q[2]
+    pose_goal.orientation.w = q[3]
+
+    pose_goal.position.x = x+0.2*U[0]
+    pose_goal.position.y = y+0.2*U[1]
+    pose_goal.position.z = z+0.2*U[2]
     group.set_pose_target(pose_goal)
 
     ## Now, we call the planner to compute the plan and execute it.
@@ -234,7 +317,6 @@ class MoveGroupPickAndPlace(object):
     # Note: there is no equivalent function for clear_joint_value_targets()
     group.clear_pose_targets()
 
-    ## END_SUB_TUTORIAL
 
     # For testing:
     # Note that since this section of code will not be included in the tutorials
@@ -243,299 +325,6 @@ class MoveGroupPickAndPlace(object):
     print "moving to:"
     print pose_goal
     return all_close(pose_goal, current_pose, 0.01)
-
-  def go_to_pose_goal2(self):
-    group = self.group
-    pose_goal = geometry_msgs.msg.Pose()
-
-    pose_goal.orientation.x = 0.0
-    pose_goal.orientation.y = 0.0
-    pose_goal.orientation.z = 1.
-    pose_goal.orientation.w = 0.0
-    pose_goal.position.x = 5.2
-    pose_goal.position.y = 5.5
-    pose_goal.position.z = 0.5
-
-    group.set_pose_target(pose_goal)
-    plan = group.go(wait=True)
-    group.stop()
-    group.clear_pose_targets()
-    current_pose = self.group.get_current_pose().pose
-    print "moving to:"
-    print pose_goal
-    return all_close(pose_goal, current_pose, 0.01)
-
-  def go_to_pose_goal3(self):
-    group = self.group
-    pose_goal = geometry_msgs.msg.Pose()
-
-    pose_goal.orientation.x = 0.0
-    pose_goal.orientation.y = 0.0
-    pose_goal.orientation.z = 1.
-    pose_goal.orientation.w = 0.0
-    pose_goal.position.x = 5.2
-    pose_goal.position.y = 8.0
-    pose_goal.position.z = 0.5
-
-    group.set_pose_target(pose_goal)
-    plan = group.go(wait=True)
-    group.stop()
-    group.clear_pose_targets()
-    current_pose = self.group.get_current_pose().pose
-    print "moving to:"
-    print pose_goal
-    return all_close(pose_goal, current_pose, 0.01)
-
-
-  def plan_cartesian_path(self, scale=1):
-    # Copy class variables to local variables to make the web tutorials more clear.
-    # In practice, you should use the class variables directly unless you have a good
-    # reason not to.
-    group = self.group
-
-    ## BEGIN_SUB_TUTORIAL plan_cartesian_path
-    ##
-    ## Cartesian Paths
-    ## ^^^^^^^^^^^^^^^
-    ## You can plan a Cartesian path directly by specifying a list of waypoints
-    ## for the end-effector to go through:
-    ##
-    waypoints = []
-
-    wpose = group.get_current_pose().pose
-    wpose.position.z -= scale * 0.3  # First move up (z)
-    wpose.position.y += scale * 0.6  # and sideways (y)
-    waypoints.append(copy.deepcopy(wpose))
-
-    wpose.position.x += scale * 0.3  # Second move forward/backwards in (x)
-    waypoints.append(copy.deepcopy(wpose))
-
-    wpose.position.y -= scale * 0.3  # Third move sideways (y)
-    waypoints.append(copy.deepcopy(wpose))
-
-    # We want the Cartesian path to be interpolated at a resolution of 1 cm
-    # which is why we will specify 0.01 as the eef_step in Cartesian
-    # translation.  We will disable the jump threshold by setting it to 0.0 disabling:
-    (plan, fraction) = group.compute_cartesian_path(
-                                       waypoints,   # waypoints to follow
-                                       0.01,        # eef_step
-                                       0.0)         # jump_threshold
-
-    # Note: We are just planning, not asking move_group to actually move the robot yet:
-    return plan, fraction
-
-    ## END_SUB_TUTORIAL
-
-  def display_trajectory(self, plan):
-    # Copy class variables to local variables to make the web tutorials more clear.
-    # In practice, you should use the class variables directly unless you have a good
-    # reason not to.
-    robot = self.robot
-    display_trajectory_publisher = self.display_trajectory_publisher
-
-    ## BEGIN_SUB_TUTORIAL display_trajectory
-    ##
-    ## Displaying a Trajectory
-    ## ^^^^^^^^^^^^^^^^^^^^^^^
-    ## You can ask RViz to visualize a plan (aka trajectory) for you. But the
-    ## group.plan() method does this automatically so this is not that useful
-    ## here (it just displays the same trajectory again):
-    ##
-    ## A `DisplayTrajectory`_ msg has two primary fields, trajectory_start and trajectory.
-    ## We populate the trajectory_start with our current robot state to copy over
-    ## any AttachedCollisionObjects and add our plan to the trajectory.
-    display_trajectory = moveit_msgs.msg.DisplayTrajectory()
-    display_trajectory.trajectory_start = robot.get_current_state()
-    display_trajectory.trajectory.append(plan)
-    # Publish
-    display_trajectory_publisher.publish(display_trajectory);
-
-    ## END_SUB_TUTORIAL
-
-  def execute_plan(self, plan):
-    # Copy class variables to local variables to make the web tutorials more clear.
-    # In practice, you should use the class variables directly unless you have a good
-    # reason not to.
-    group = self.group
-
-    ## BEGIN_SUB_TUTORIAL execute_plan
-    ##
-    ## Executing a Plan
-    ## ^^^^^^^^^^^^^^^^
-    ## Use execute if you would like the robot to follow
-    ## the plan that has already been computed:
-    group.execute(plan, wait=True)
-
-    ## **Note:** The robot's current joint state must be within some tolerance of the
-    ## first waypoint in the `RobotTrajectory`_ or ``execute()`` will fail
-    ## END_SUB_TUTORIAL
-
-  def wait_for_state_update(self, box_is_known=False, box_is_attached=False, timeout=4):
-    # Copy class variables to local variables to make the web tutorials more clear.
-    # In practice, you should use the class variables directly unless you have a good
-    # reason not to.
-    box_name = self.box_name
-    scene = self.scene
-
-    ## BEGIN_SUB_TUTORIAL wait_for_scene_update
-    ##
-    ## Ensuring Collision Updates Are Receieved
-    ## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    ## If the Python node dies before publishing a collision object update message, the message
-    ## could get lost and the box will not appear. To ensure that the updates are
-    ## made, we wait until we see the changes reflected in the
-    ## ``get_known_object_names()`` and ``get_known_object_names()`` lists.
-    ## For the purpose of this tutorial, we call this function after adding,
-    ## removing, attaching or detaching an object in the planning scene. We then wait
-    ## until the updates have been made or ``timeout`` seconds have passed
-    start = rospy.get_time()
-    seconds = rospy.get_time()
-    while (seconds - start < timeout) and not rospy.is_shutdown():
-      # Test if the box is in attached objects
-      attached_objects = scene.get_attached_objects([box_name])
-      is_attached = len(attached_objects.keys()) > 0
-
-      # Test if the box is in the scene.
-      # Note that attaching the box will remove it from known_objects
-      is_known = box_name in scene.get_known_object_names()
-
-      # Test if we are in the expected state
-      if (box_is_attached == is_attached) and (box_is_known == is_known):
-        return True
-
-      # Sleep so that we give other threads time on the processor
-      rospy.sleep(0.1)
-      seconds = rospy.get_time()
-
-    # If we exited the while loop without returning then we timed out
-    return False
-    ## END_SUB_TUTORIAL
-
-  def add_box(self, timeout=4):
-    # Copy class variables to local variables to make the web tutorials more clear.
-    # In practice, you should use the class variables directly unless you have a good
-    # reason not to.
-    box_name = self.box_name
-    scene = self.scene
-
-    ## BEGIN_SUB_TUTORIAL add_box
-    ##
-    ## Adding Objects to the Planning Scene
-    ## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    ## First, we will create a box in the planning scene at the location of the left finger:
-    box_pose = geometry_msgs.msg.PoseStamped()
-    box_pose.header.frame_id = "panda_leftfinger"
-    box_pose.pose.orientation.w = 1.0
-    box_name = "box"
-    scene.add_box(box_name, box_pose, size=(0.1, 0.1, 0.1))
-
-    ## END_SUB_TUTORIAL
-    # Copy local variables back to class variables. In practice, you should use the class
-    # variables directly unless you have a good reason not to.
-    self.box_name=box_name
-    return self.wait_for_state_update(box_is_known=True, timeout=timeout)
-
-  def add_floor(self, timeout=4):
-    # Copy class variables to local variables to make the web tutorials more clear.
-    # In practice, you should use the class variables directly unless you have a good
-    # reason not to.
-    floor_name = self.box_name
-    scene = self.scene
-
-    ## BEGIN_SUB_TUTORIAL add_box
-    ##
-    ## Adding Objects to the Planning Scene
-    ## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    ## First, we will create a box in the planning scene at the location of the left finger:
-    floor_pose = geometry_msgs.msg.PoseStamped()
-    floor_pose.header.frame_id = "world"
-    floor_pose.pose.position.x = 5.0
-    floor_pose.pose.position.y = 5.0
-    floor_pose.pose.position.z = 0.0
-    floor_pose.pose.orientation.w = 1.0
-    floor_name = "floor"
-    scene.add_box(floor_name, floor_pose, size=(10.0, 10.0, 0.24))
-#    scene.add_box(floor_name, pose=(5.0, 5.0, 0.0), size=(30.0, 30.0, 0.2))
-
-    ## END_SUB_TUTORIAL
-    # Copy local variables back to class variables. In practice, you should use the class
-    # variables directly unless you have a good reason not to.
-    self.floor_name=floor_name
-    return self.wait_for_state_update(box_is_known=True, timeout=timeout)
-
-
-  def attach_box(self, timeout=4):
-    # Copy class variables to local variables to make the web tutorials more clear.
-    # In practice, you should use the class variables directly unless you have a good
-    # reason not to.
-    box_name = self.box_name
-    robot = self.robot
-    scene = self.scene
-    eef_link = self.eef_link
-    group_names = self.group_names
-
-    ## BEGIN_SUB_TUTORIAL attach_object
-    ##
-    ## Attaching Objects to the Robot
-    ## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    ## Next, we will attach the box to the Panda wrist. Manipulating objects requires the
-    ## robot be able to touch them without the planning scene reporting the contact as a
-    ## collision. By adding link names to the ``touch_links`` array, we are telling the
-    ## planning scene to ignore collisions between those links and the box. For the Panda
-    ## robot, we set ``grasping_group = 'hand'``. If you are using a different robot,
-    ## you should change this value to the name of your end effector group name.
-    grasping_group = 'hand'
-    touch_links = robot.get_link_names(group=grasping_group)
-    scene.attach_box(eef_link, box_name, touch_links=touch_links)
-    ## END_SUB_TUTORIAL
-
-    # We wait for the planning scene to update.
-    return self.wait_for_state_update(box_is_attached=True, box_is_known=False, timeout=timeout)
-
-  def detach_box(self, timeout=4):
-    # Copy class variables to local variables to make the web tutorials more clear.
-    # In practice, you should use the class variables directly unless you have a good
-    # reason not to.
-    box_name = self.box_name
-    scene = self.scene
-    eef_link = self.eef_link
-
-    ## BEGIN_SUB_TUTORIAL detach_object
-    ##
-    ## Detaching Objects from the Robot
-    ## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    ## We can also detach and remove the object from the planning scene:
-    scene.remove_attached_object(eef_link, name=box_name)
-    ## END_SUB_TUTORIAL
-
-    # We wait for the planning scene to update.
-    return self.wait_for_state_update(box_is_known=True, box_is_attached=False, timeout=timeout)
-
-  def remove_box(self, timeout=4):
-    # Copy class variables to local variables to make the web tutorials more clear.
-    # In practice, you should use the class variables directly unless you have a good
-    # reason not to.
-    box_name = self.box_name
-    scene = self.scene
-
-    ## BEGIN_SUB_TUTORIAL remove_object
-    ##
-    ## Removing Objects from the Planning Scene
-    ## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    ## We can remove the box from the world.
-    scene.remove_world_object(box_name)
-
-    ## **Note:** The object must be detached before we can remove it from the world
-    ## END_SUB_TUTORIAL
-
-    # We wait for the planning scene to update.
-    return self.wait_for_state_update(box_is_attached=False, box_is_known=False, timeout=timeout)
-
-#  def attach_object(self, name):
-#      scene = self.scene
-#      aco = AttachedCollisionObject()
-#      aco.object.operation = CollisionObject.ADD
-
 
 
 cylinder_com = geometry_msgs.msg.Point()
@@ -569,55 +358,27 @@ def main():
 
     rospy.Subscriber("cylinder_com", geometry_msgs.msg.Point, callback_com)
     rospy.Subscriber("cylinder_dirvec", geometry_msgs.msg.Point, callback_dirvec)
-    #rospy.Subscriber("collision_object", moveit_msgs.msg.CollisionObject, callback_CollisionObject)
     rospy.wait_for_message("cylinder_dirvec", geometry_msgs.msg.Point, timeout=None)
 
-    rate = rospy.Rate(10)
-    # spin() simply keeps python from exiting until this node is stopped
-    #rospy.spin()
-
-#    while cylinder_com.x == 0:
-#        rate.sleep()
-#        continue
-    print "============ Press `Enter` to begin the Pick And Place sequence by setting up the moveit_commander (press ctrl-d to exit) ..."
-    raw_input()
-    tutorial = MoveGroupPickAndPlace()
-    #tutorial.group.detach_object()
-
-
-    #pose = geometry_msgs.msg.PoseStamped()
-    #pose.header.frame_id = "world"
-    #pose.pose.position.x = cylinder_com.x
-    #pose.pose.position.y = cylinder_com.y
-    #pose.pose.position.z = cylinder_com.z
-    #pose.pose.orientation.x = cylinder_dirvec.x
-    #pose.pose.orientation.y = cylinder_dirvec.y
-    #pose.pose.orientation.z = cylinder_dirvec.z
-    #tutorial.scene.add_cylinder('cylinder', pose, 1.2, 0.13)
-
-    #tutorial.group.detach_object('cylinder')
-
-    #print "============ Press `Enter` to add floor ..."
+    #print "============ Press `Enter` to begin the Pick And Place sequence by setting up the moveit_commander (press ctrl-d to exit) ..."
     #raw_input()
-    #tutorial.add_floor()
-
-    #cyl = tutorial.scene.get_known_object_names()
-    #print(cyl)
-    #cyl_obj = tutorial.scene.get_objects(['cylinder'])
+    tutorial = MoveGroupPickAndPlace()
 
     print "============ Press `Enter` to execute a movement using a joint state goal ..."
     raw_input()
 
-    tutorial.go_to_pose_goal(cylinder_com.x+0.16, cylinder_com.y, cylinder_com.z)
+    #tutorial.go_to_pose_goal(cylinder_com.x+0.16, cylinder_com.y, cylinder_com.z)
 
-    tutorial.group.attach_object('cylinder')
+    tutorial.go_to_pose_goal(cylinder_com.x, cylinder_com.y, cylinder_com.z, cylinder_dirvec.x, cylinder_dirvec.y, cylinder_dirvec.z)
+
+    #tutorial.group.attach_object('cylinder')
 
     print "============ Press `Enter` when the cylinder is physically attatched..."
     raw_input()
 
     tutorial.go_to_joint_state()
 
-    tutorial.go_to_pose_goal(cylinder_com.x+0.16, cylinder_com.y, cylinder_com.z+0.1)
+    #tutorial.go_to_pose_goal(cylinder_com.x+0.16, cylinder_com.y, cylinder_com.z+0.1, cylinder_dirvec.x, cylinder_dirvec.y, cylinder_dirvec.z)
 
     # Create table obstacle
 #    planning_scene.removeCollisionObject('floor')

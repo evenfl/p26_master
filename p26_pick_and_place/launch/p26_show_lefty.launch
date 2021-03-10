@@ -7,7 +7,7 @@
 -->
 <launch>
 
-  <include file="$(find p26_cylinder_segmentation)/launch/p26_moveit_planning_execution.launch">
+  <include file="$(find p26_pick_and_place)/launch/p26_moveit_planning_execution.launch">
     <arg name="mode" value="real" />
   </include>
 

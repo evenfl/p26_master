@@ -2,11 +2,11 @@
 #include "segment.h"
 #include "addCylinder.h"
 
-//typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
+typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
 
-pcl::PointCloud<PointT>::Ptr cloud_merged (new pcl::PointCloud<PointT>);
-pcl::PointCloud<PointT>::Ptr cloud_cylinder (new pcl::PointCloud<PointT>);
-pcl::PointCloud<PointT>::Ptr cloud_cylinder_tmp (new pcl::PointCloud<PointT>);
+PointCloud::Ptr cloud_merged (new PointCloud);
+PointCloud::Ptr cloud_cylinder (new PointCloud);
+PointCloud::Ptr cloud_cylinder_tmp (new PointCloud);
 void callback(const sensor_msgs::PointCloud2ConstPtr& input);
 int counter = 0;
 
@@ -23,8 +23,8 @@ int main(int argc, char** argv)
   ros::Subscriber sub4 = nh.subscribe ("/master/jetson4/kinect_decomp", 1, callback);
   ros::Subscriber sub5 = nh.subscribe ("/master/jetson5/kinect_decomp", 1, callback);
   ros::Subscriber sub6 = nh.subscribe ("/master/jetson6/kinect_decomp", 1, callback);
-  //ros::Publisher pub = nh.advertise<PointCloud> ("cloud_cylinder", 1);
-  ros::Publisher planning_scene_diff_publisher = nh.advertise<moveit_msgs::CollisionObject>("collision_object", 1);
+//  ros::Publisher pub = nh.advertise<PointCloud> ("cloud_cylinder", 1);
+  ros::Publisher cylinder_object_publisher = nh.advertise<moveit_msgs::CollisionObject>("collision_object", 1);
   ros::Publisher pub_com = nh.advertise<geometry_msgs::Point> ("cylinder_com", 1);
   ros::Publisher pub_dirvec = nh.advertise<geometry_msgs::Point> ("cylinder_dirvec", 1);
 
@@ -34,7 +34,7 @@ int main(int argc, char** argv)
 
   PointT point_com_avg;
   PointT dirvec_avg;
-  const int nrOfIterations = 40;
+  const int nrOfIterations = 20;
   const float deviance = 0.06;
 
   unsigned int inconsistencyCounter = 0;
@@ -53,6 +53,8 @@ int main(int argc, char** argv)
     rate.sleep();
     if (counter >= 6)
     {
+      // If all pointclouds are received, find the pose
+
       pcl::ModelCoefficients::Ptr coefficients_cylinder (new pcl::ModelCoefficients);
       cloud_cylinder = segment(cloud_merged, coefficients_cylinder);
 
@@ -124,10 +126,10 @@ int main(int argc, char** argv)
         point.z = point.z + increment*dirvec.z;
       }
 
+
       cloud_cylinder = passThroughFilterSphere(cloud_cylinder, point_com, sqrt((cylinderLength/2)*(cylinderLength/2)+cylinderRadius*cylinderRadius), false);
 
       counter = 0;
-      //ros::shutdown();
 
       if (iterations == 0 && point_com.x != 0.0)
       {
@@ -175,7 +177,7 @@ int main(int argc, char** argv)
       }
       if (iterations >= nrOfIterations)
       {
-        //planning_scene_diff_publisher.publish(addCylinder(cylinder_params));
+        //cylinder_object_publisher.publish(addCylinder(cylinder_params));
         std::cerr << std::endl << "Direction vector: [ " << dirvec_avg.x << ", " << dirvec_avg.y << ", " << dirvec_avg.z << " ]" << std::endl;
         std::cerr << std::endl << "Centre of mass:   [ " << point_com_avg.x << ", " << point_com_avg.y << ", " << point_com_avg.z << " ]" << std::endl << std::endl;
         iterations = 0;
@@ -190,7 +192,7 @@ int main(int argc, char** argv)
         cylinder_params.direction_vec[0] = dirvec_avg.x;
         cylinder_params.direction_vec[1] = dirvec_avg.y;
         cylinder_params.direction_vec[2] = dirvec_avg.z;
-        planning_scene_diff_publisher.publish(addCylinder(cylinder_params));
+        cylinder_object_publisher.publish(addCylinder(cylinder_params));
         geometry_msgs::Point pub_com_msg;
         geometry_msgs::Point pub_dirvec_msg;
         pub_com_msg.x = point_com_avg.x;

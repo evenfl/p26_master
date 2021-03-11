@@ -284,21 +284,23 @@ class MoveGroupPickAndPlace(object):
     U0 = np.cross(W0, U)
     angle_H=atan2(U[1],U[0])
     angle_P=asin(U[2])
-    angle_B = atan2( np.dot(W0,D), np.dot(U0,D) / vec_length(U0) * vec_length(W0) )
+    angle_B = atan2( np.dot(W0,D) / vec_length(W0), np.dot(U0,D) / vec_length(U0) )
     print(angle_B)
     print(angle_P)
     print(angle_H)
 
 
-    q = euler_to_quaternion( angle_B, angle_P, np.pi+angle_H )
+    q = euler_to_quaternion( -angle_B, angle_P, np.pi+angle_H )
+    q = normalize(q)
+
     #q = euler_to_quaternion(0, np.pi/2, np.pi) # Straight down
     #q = euler_to_quaternion(0, np.pi, np.pi) # Straight backwards and upside down
     #q = euler_to_quaternion(0, 0, np.pi) # Straight forwards
     #q = euler_to_quaternion(0, 0, 0) # Straight backwards
 
     pose_goal = geometry_msgs.msg.Pose()
-    q_length = vec_length(q)
-    q = np.asarray(q)/q_length
+    #q_length = vec_length(q)
+    print(q)
     pose_goal.orientation.x = q[0]
     pose_goal.orientation.y = q[1]
     pose_goal.orientation.z = q[2]

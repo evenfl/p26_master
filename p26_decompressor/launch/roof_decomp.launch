@@ -1,0 +1,20 @@
+<launch>
+
+
+<!-- ================= Kinect2 ======================= -->
+<node pkg="wp3_decompressor" type="wp3_decompressor_node" name="kinect2_decomp">
+    <param name="sensor_name" value="roof" />
+    <param name="sensor_frame" value="myworld" />
+    <param name="sensor_type" value="0" />
+    <param name="filter_value" value="50" />
+</node>
+
+<!-- ================= VELODYNE ======================= -->
+<node pkg="wp3_decompressor" type="wp3_decompressor_node" name="velodyne_decomp">
+    <param name="sensor_name" value="roof" />
+    <param name="sensor_type" value="1" />
+    <param name="sensor_frame" value="myworld" />
+    <param name="filter_value" value="0" />
+</node>
+
+</launch>

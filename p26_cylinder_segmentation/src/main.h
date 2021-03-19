@@ -13,6 +13,8 @@
 #include "pcl_ros/point_cloud.h"
 #include <boost/foreach.hpp>
 #include <iostream>
+#include <string>
+#include <fstream> //For saving to text file
 #include <ros/ros.h>
 #include "std_msgs/String.h"
 #include <sstream>

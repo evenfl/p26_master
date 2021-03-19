@@ -1,0 +1,58 @@
+<launch>
+<arg name="filter_value"   default="127" />
+
+<!-- ================= Jetson1 ======================= -->
+<node pkg="wp3_decompressor" type="wp3_decompressor_node" name="jetson1_decomp_kinect">
+    <param name="sensor_name" value="jetson1" />
+    <param name="sensor_frame" value="jetson1_ir_optical_frame" />
+    <param name="sensor_type" value="0" />
+    <param name="filter_value" value="$(arg filter_value)" />
+</node>
+
+<!-- ================= Jetson2 ======================= -->
+<node pkg="wp3_decompressor" type="wp3_decompressor_node" name="jetson2_decomp_kinect">
+    <param name="sensor_name" value="jetson2" />
+    <param name="sensor_frame" value="jetson2_ir_optical_frame" />
+    <param name="sensor_type" value="0" />
+    <param name="filter_value" value="$(arg filter_value)" />
+</node>
+
+<!-- ================= Jetson3 ======================= -->
+<node pkg="wp3_decompressor" type="wp3_decompressor_node" name="jetson3_decomp_kinect">
+    <param name="sensor_name" value="jetson3" />
+    <param name="sensor_frame" value="jetson3_ir_optical_frame" />
+    <param name="sensor_type" value="0" />
+    <param name="filter_value" value="$(arg filter_value)" />
+</node>
+
+<!-- ================= Jetson4 ======================= -->
+<node pkg="wp3_decompressor" type="wp3_decompressor_node" name="jetson4_decomp_kinect">
+    <param name="sensor_name" value="jetson4" />
+    <param name="sensor_frame" value="jetson4_ir_optical_frame" />
+    <param name="sensor_type" value="0" />
+    <param name="filter_value" value="$(arg filter_value)" />
+</node>
+
+<!-- ================= Jetson5 ======================= -->
+<node pkg="wp3_decompressor" type="wp3_decompressor_node" name="jetson5_decomp_kinect">
+    <param name="sensor_name" value="jetson5" />
+    <param name="sensor_frame" value="jetson5_ir_optical_frame" />
+    <param name="sensor_type" value="0" />
+    <param name="filter_value" value="$(arg filter_value)" />
+</node>
+
+<!-- ================= Jetson6 KINECT ======================= -->
+<node pkg="wp3_decompressor" type="wp3_decompressor_node" name="jetson6_decomp_kinect">
+    <param name="sensor_name" value="jetson6" />
+    <param name="sensor_frame" value="jetson6_ir_optical_frame" />
+    <param name="sensor_type" value="0" />
+    <param name="filter_value" value="$(arg filter_value)" />
+</node>
+<!-- ================= Jetson6 VELODYNE ======================= -->
+<!--<node pkg="wp3_decompressor" type="wp3_decompressor_node" name="jetson6_decomp_velodyne">
+    <param name="sensor_name" value="jetson6" />
+    <param name="sensor_type" value="1" />
+    <param name="filter_value" value="$arg filter_value" />
+</node>-->
+
+</launch>

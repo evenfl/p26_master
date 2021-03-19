@@ -1,0 +1,14 @@
+<launch>
+
+<group ns="p26_lefty">
+
+<!--  <node name="p26_pick_and_place" pkg="p26_pick_and_place" type="collision_map.py" respawn="false" output="screen">-->
+<!--  </node>-->
+
+  <node name="p26_pick_and_place" pkg="p26_pick_and_place" type="p26_move.py" respawn="false" output="screen">
+  </node>
+
+
+</group>
+
+</launch>

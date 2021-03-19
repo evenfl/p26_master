@@ -82,20 +82,20 @@ def vec_length(vec):
     return length
 
 class GraspingPointCandidate:
-    def __init__(self, theta, dirvec, v, P_com, P_eef):
+    def __init__(self, theta, dirvec, u_init, P_com, P_eef):
 
         # Rodrigues' rotation formula
-        w = np.cross(v,dirvec)
+        w = np.cross(u_init,dirvec)
 
         x1 = cos(theta)
-        x2 = sin(theta)/vec_length(w)
+        x2 = sin(theta)
 
-        u = x1*v + x2*w
+        u_rot = x1*u_init + x2*w
 
-        u = normalize(u)
+        u_rot = normalize(u_rot)
 
-        self.d = vec_length([P_eef[0]-(P_com[0]+u[0]), P_eef[1]-(P_com[1]+u[1]), P_eef[2]-(P_com[2]+u[2])])
-        self.u = u
+        self.d = vec_length([P_eef[0]-(P_com[0]+u_rot[0]), P_eef[1]-(P_com[1]+u_rot[1]), P_eef[2]-(P_com[2]+u_rot[2])])
+        self.u = u_rot
 
 def all_close(goal, actual, tolerance):
   """
@@ -265,12 +265,12 @@ class MoveGroupPickAndPlace(object):
     if zd > 0.9:
         v0 = [1,0,0]
 
-    v1 = np.cross(D, v0)
-    v1 = normalize(v1)
+    u = np.cross(D, v0)
+    u = normalize(u)
 
     a = np.array([])
     for i in range(360):
-        a = np.append(a, GraspingPointCandidate(i*(2*np.pi)/360, D, v1, P_com, P_eef))
+        a = np.append(a, GraspingPointCandidate(i*(2*np.pi)/360, D, u, P_com, P_eef))
 
     smallest_distance = 1000000
     for i in range(360):
@@ -327,6 +327,73 @@ class MoveGroupPickAndPlace(object):
     print "moving to:"
     print pose_goal
     return all_close(pose_goal, current_pose, 0.01)
+  def wait_for_state_update(self, box_is_known=False, box_is_attached=False, timeout=4):
+  # Copy class variables to local variables to make the web tutorials more clear.
+  # In practice, you should use the class variables directly unless you have a good
+  # reason not to.
+    box_name = self.box_name
+    scene = self.scene
+
+## BEGIN_SUB_TUTORIAL wait_for_scene_update
+##
+## Ensuring Collision Updates Are Receieved
+## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+## If the Python node dies before publishing a collision object update message, the message
+## could get lost and the box will not appear. To ensure that the updates are
+## made, we wait until we see the changes reflected in the
+## ``get_known_object_names()`` and ``get_known_object_names()`` lists.
+## For the purpose of this tutorial, we call this function after adding,
+## removing, attaching or detaching an object in the planning scene. We then wait
+## until the updates have been made or ``timeout`` seconds have passed
+    start = rospy.get_time()
+    seconds = rospy.get_time()
+    while (seconds - start < timeout) and not rospy.is_shutdown():
+  # Test if the box is in attached objects
+      attached_objects = scene.get_attached_objects([box_name])
+      is_attached = len(attached_objects.keys()) > 0
+
+  # Test if the box is in the scene.
+  # Note that attaching the box will remove it from known_objects
+      is_known = box_name in scene.get_known_object_names()
+
+  # Test if we are in the expected state
+      if (box_is_attached == is_attached) and (box_is_known == is_known):
+        return True
+
+  # Sleep so that we give other threads time on the processor
+      rospy.sleep(0.1)
+      seconds = rospy.get_time()
+
+# If we exited the while loop without returning then we timed out
+    return False
+## END_SUB_TUTORIAL
+  def add_box(self, x, y, z, i, timeout=4):
+    # Copy class variables to local variables to make the web tutorials more clear.
+    # In practice, you should use the class variables directly unless you have a good
+    # reason not to.
+    box_name = self.box_name
+    scene = self.scene
+
+    ## BEGIN_SUB_TUTORIAL add_box
+    ##
+    ## Adding Objects to the Planning Scene
+    ## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ## First, we will create a box in the planning scene at the location of the left finger:
+    box_pose = geometry_msgs.msg.PoseStamped()
+    box_pose.header.frame_id = self.group.get_planning_frame()
+    print(self.group.get_planning_frame())
+    box_pose.pose.position.x = x
+    box_pose.pose.position.y = y
+    box_pose.pose.position.z = z
+    box_pose.pose.orientation.w = 1.0
+    box_name = "box" + str(i)
+    scene.add_box(box_name, box_pose, size=(1, 1, 1))
+
+    ## END_SUB_TUTORIAL
+    # Copy local variables back to class variables. In practice, you should use the class
+    # variables directly unless you have a good reason not to.
+    #self.box_name=box_name
+    return self.wait_for_state_update(box_is_known=True, timeout=timeout)
 
 
 cylinder_com = geometry_msgs.msg.Point()
@@ -365,6 +432,7 @@ def main():
     #print "============ Press `Enter` to begin the Pick And Place sequence by setting up the moveit_commander (press ctrl-d to exit) ..."
     #raw_input()
     tutorial = MoveGroupPickAndPlace()
+    tutorial.add_box(5,4,1,1)
 
     print "============ Press `Enter` to execute a movement using a joint state goal ..."
     raw_input()

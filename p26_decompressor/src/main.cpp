@@ -45,23 +45,28 @@ int main(int argc, char **argv)
     int sensorType;
 
 
-    nh.getParam("sensor_name", sensorName);
+    nh.getParam("output_topic", outputTopic);
+    nh.getParam("input_topic", inputTopic);
     nh.getParam("filter_value", filterValue);
     nh.getParam("sensor_type", sensorType);
     nh.param<std::string>("sensor_frame", sensorFrame, "world");
+
+
 
     switch(sensorType) {
     case 0: // Kinect
 
       ROS_INFO("Starting node using KINECT V2");
-      outputTopic = "/p26_lefty/master/"+sensorName+"/kinect_decomp";
-      inputTopic = "/p26_lefty/"+sensorName+"/wp3/kinect_comp";
+//      outputTopic = "/p26_lefty/master/"+sensorName+"/kinect_decomp";
+//      inputTopic = "/p26_lefty/"+sensorName+"/wp3/kinect_comp";
+//      outputTopic = "/p26_lefty/master/kinect_decomp";
+//      inputTopic = "/p26_lefty/wp3/kinect_comp";
       break;
 
     case 1: // Velodyne
       ROS_INFO("Starting node using VELODYNE");
-      outputTopic = "/p26_lefty/master/"+sensorName+"/velodyne_decomp";
-      inputTopic = "/p26_lefty/"+sensorName+"/wp3/velodyne_comp";
+      outputTopic = "/p26_lefty/master/velodyne_decomp";
+      inputTopic = "/p26_lefty/wp3/velodyne_comp";
       break;
 
     } // End switch (sensorType)

@@ -432,7 +432,7 @@ def main():
     #print "============ Press `Enter` to begin the Pick And Place sequence by setting up the moveit_commander (press ctrl-d to exit) ..."
     #raw_input()
     tutorial = MoveGroupPickAndPlace()
-    tutorial.add_box(5,4,1,1)
+    #tutorial.add_box(5,4,1,1)
 
     print "============ Press `Enter` to execute a movement using a joint state goal ..."
     raw_input()
@@ -441,14 +441,14 @@ def main():
 
     tutorial.go_to_pose_goal(cylinder_com.x, cylinder_com.y, cylinder_com.z, cylinder_dirvec.x, cylinder_dirvec.y, cylinder_dirvec.z)
 
-    #tutorial.group.attach_object('cylinder')
+    tutorial.group.attach_object('cylinder')
 
     print "============ Press `Enter` when the cylinder is physically attatched..."
     raw_input()
 
     tutorial.go_to_joint_state()
 
-    #tutorial.go_to_pose_goal(cylinder_com.x+0.16, cylinder_com.y, cylinder_com.z+0.1, cylinder_dirvec.x, cylinder_dirvec.y, cylinder_dirvec.z)
+    tutorial.go_to_pose_goal(cylinder_com.x+0.16, cylinder_com.y, cylinder_com.z+0.1, cylinder_dirvec.x, cylinder_dirvec.y, cylinder_dirvec.z)
 
     # Create table obstacle
 #    planning_scene.removeCollisionObject('floor')
@@ -496,7 +496,7 @@ def main():
 
 #    print "============ Press `Enter` to remove the box from the planning scene ..."
 #    raw_input()
-#    tutorial.remove_box()
+    #tutorial.remove_box()
     print( "============ Press `ENTER` to kill")
     raw_input()
     tutorial.group.detach_object('cylinder')

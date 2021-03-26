@@ -1,8 +1,8 @@
 <launch>
 
-<arg name="mode" default="sim" />  <!--possible modes: sim, cosim, real-->
+<arg name="mode" default="sim" />
+<!--possible modes: sim, cosim, real-->
 
-<group ns="p26_lefty">
 <!-- The planning and execution components of MoveIt! configured to run -->
   <!-- using the ROS-Industrial interface. -->
    <!-- Non-standard joint names:
@@ -35,6 +35,10 @@
 <!--  <arg name="db_path" default="$(find lefty_moveit_config)/default_warehouse_mongo_db" />-->
   <arg name="db_path" default="$(find p26_lefty_moveit_config)/default_warehouse_mongo_db" />
 
+
+<!-- specify the planning pipeline -->
+  <arg name="pipeline" default="ompl" />
+
   <!-- load the robot_description parameter before launching ROS-I nodes -->
   <include file="$(find p26_lefty_moveit_config)/launch/planning_context.launch" >
     <arg name="load_robot_description" value="true" />
@@ -46,21 +50,16 @@
   </group>
 
 
-
-
-
-
-
   <!--robot controller-->
-<!--  <group unless="$(eval arg('mode') == 'sim')">-->
+  <group unless="$(eval arg('mode') == 'sim')">
     <!-- Load joint names -->
-<!--    <rosparam command="load" file="$(find wp3_robots)/config/joint_names_lefty.yaml" />-->
+    <rosparam command="load" file="$(find p26_robot)/config/joint_names_$(arg robot_name).yaml" />
     <!-- Start interface -->
-<!--    <include file="$(find abb_driver)/launch/robot_interface.launch">-->
-<!--      <arg name="robot_ip"    value="$(arg robot_ip)" /> 10.225.120.201-->
-<!--      <arg name="J23_coupled" value="true" />-->
-<!--    </include>-->
-<!--  </group>-->
+    <include file="$(find abb_driver)/launch/robot_interface.launch">
+      <arg name="robot_ip"    value="$(arg robot_ip)" /> 10.225.120.201
+      <arg name="J23_coupled" value="true" />
+    </include>
+  </group>
 
 
   <!-- publish the robot state (tf transforms) -->
@@ -70,6 +69,21 @@
     <arg name="publish_monitored_planning_scene" value="true" />
   </include>-->
 
+
+
+<!-- We do not have a robot connected, so publish fake joint states -->
+<node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+  <param name="use_gui" value="false"/>
+  <rosparam param="source_list">[move_group/fake_controller_joint_states]</rosparam>
+</node>
+
+
+
+
+<!-- Combine joint values -->
+<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+
+
   <!-- Run the main MoveIt! executable without trajectory execution (we do not have controllers configured by default) -->
   <include file="$(find p26_lefty_moveit_config)/launch/move_group.launch">
     <arg name="publish_monitored_planning_scene" value="true" />
@@ -77,6 +91,7 @@
 <!--    <arg name="fake_execution" value="true"/>-->
     <arg name="info" value="true"/>
     <arg name="debug" value="$(arg debug)"/>
+    <arg name="pipeline" value="$(arg pipeline)"/>
   </include>
 
 <!--  <include file="$(find lefty_moveit_config)/launch/moveit_rviz.launch">
@@ -90,30 +105,38 @@
 
 
 
-
 <!-- Show lefty -->
-<param name="tf_prefix" value="p26_lefty_tf" />
+<!--<node pkg="tf" type="static_transform_publisher" name="p26_lefty_world" args="0 0 0 0 0 0 world p26_lefty_tf/world 100"/>-->
+<!--<param name="tf_prefix" value="p26_lefty_tf" />-->
 
   <!-- Load joint names -->
-  <rosparam command="load" file="$(find p26_robot)/config/joint_names_$(arg robot_name).yaml" />
+<!--  <rosparam command="load" file="$(find p26_robot)/config/joint_names_$(arg robot_name).yaml" />-->
+
+
+
+
+<!--<node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">-->
+<!--  <param name="use_gui" value="false"/>-->
+<!--  <rosparam param="source_list">[move_group/fake_controller_joint_states]</rosparam>-->
+<!--</node>-->
+
+
+
+
+
+
+
+
 
   <!-- Start interface -->
   <!-- (robot_state, motion_download_interface, joint_trajectory_action) -->
-  <include file="$(find abb_driver)/launch/robot_interface.launch">
-    <arg name="robot_ip"    value="$(arg robot_ip)" />
-    <arg name="J23_coupled" value="$(arg J23_coupled)" />
-  </include>
+<!--  <include file="$(find abb_driver)/launch/robot_interface.launch">-->
+<!--    <arg name="robot_ip"    value="$(arg robot_ip)" />-->
+<!--    <arg name="J23_coupled" value="$(arg J23_coupled)" />-->
+<!--  </include>-->
 
   <!--Load robot models-->
   <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find p26_robot)/urdf/$(arg robot_name).xacro' robot_name:=$(arg robot_name)" />
 
-  <!-- Combine joint values -->
-  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
-
-
-  <node pkg="tf" type="static_transform_publisher" name="p26_lefty_world" args="0 0 0 0 0 0 world p26_lefty_tf/world 100"/>
-
-
-</group>
 
 </launch>

@@ -233,6 +233,7 @@ def main():
     rospy.wait_for_message("/p26_lefty/master/jetson2/kinect_decomp", sensor_msgs.msg.PointCloud2, timeout=None)
     rospy.wait_for_message("/p26_lefty/master/jetson3/kinect_decomp", sensor_msgs.msg.PointCloud2, timeout=None)
     rospy.wait_for_message("/p26_lefty/master/jetson4/kinect_decomp", sensor_msgs.msg.PointCloud2, timeout=None)
+    rospy.wait_for_message("/p26_lefty/master/jetson5/kinect_decomp", sensor_msgs.msg.PointCloud2, timeout=None)
     rospy.wait_for_message("/p26_lefty/master/jetson6/kinect_decomp", sensor_msgs.msg.PointCloud2, timeout=None)
 
 

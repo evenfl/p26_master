@@ -2,13 +2,19 @@
 
 <group ns="p26_lefty">
 
-<!--  <node name="p26_pick_and_place" pkg="p26_pick_and_place" type="collision_map.py" respawn="false" output="screen">-->
-<!--  </node>-->
-
-  <node name="p26_pick_and_place" pkg="p26_pick_and_place" type="p26_move.py" respawn="false" output="screen">
+  <node name="p26_pick_and_place" pkg="p26_pick_and_place" type="collision_map.py" respawn="false" output="screen">
   </node>
+
+<!--  <node name="p26_pick_and_place" pkg="p26_pick_and_place" type="p26_move.py" respawn="false" output="screen">-->
+<!--  </node>-->
 
 
 </group>
+
+<param name="octomap_frame" type="string" value="odom_combined" />
+<param name="octomap_resolution" type="double" value="0.05" />
+<param name="max_range" type="double" value="5.0" />
+
+<rosparam command="load" file="$(find p26_lefty_moveit_config)/config/sensors_kinect_pointcloud.yaml" />
 
 </launch>

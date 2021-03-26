@@ -225,6 +225,6 @@ include_directories(
 
 add_executable(cylinder_segmentation src/main.cpp src/segment.cpp src/addCylinder.cpp)
 
-target_link_libraries (cylinder_segmentation ${catkin_LIBRARIES})#, ${PCL_LIBRARIES})
+target_link_libraries (cylinder_segmentation ${catkin_LIBRARIES})
 # target_link_libraries(cylinder_seg [${catkin_LIBRARIES} [${PCL_LIBRARIES}]])
 # add_dependencies(cylinder_seg cyl_seg_cpp)

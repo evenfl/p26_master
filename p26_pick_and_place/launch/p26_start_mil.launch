@@ -1,0 +1,590 @@
+<launch>
+
+<!-- 45  deg  0.785398 rad -->
+<!-- 90  deg  1.570796 rad -->
+<!-- 150 deg  2.61799 rad -->
+<!-- 140 deg  2.44346 rad -->
+
+<!--   Kinect driver-->
+  <arg name="fps_limit_kinect"    default="20"/>
+  <arg name="max_depth"           default="9.0"/>
+  <arg name="max_depth_jetson6"   default="7.0"/>
+  <arg name="min_depth"           default="0.5"/>
+
+<!-- Enable/disable stuff-->
+  <arg name="run_peopledetector"  default="false"/>
+  <arg name="run_compressor_remote"      default="true"/>
+  <arg name="run_compressor_local"      default="false"/>
+
+<!--  Compressor parameters-->
+
+  <arg name="voxel_size" default="0.04"/>
+  <arg name="crop"      default="true"/>
+  <arg name="min_x"     default="4.0"/>
+  <arg name="max_x"     default="9.5"/>
+  <arg name="min_y"     default="0.5"/>
+  <arg name="max_y"     default="9.5"/>
+  <!--<arg name="min_z"     default="0.1"/>-->
+  <arg name="min_z"     default="-0.1"/>
+  <arg name="max_z"     default=" 4.3"/>
+
+<!--  ICRA2020 parameters Compressor, AAA -->
+<!--<arg name="run_compressor"    default="true"/>
+<arg name="voxel_size" default="0.04"/>
+<arg name="crop"      default="true"/>
+<arg name="min_x"     default="1.5"/>
+<arg name="max_x"     default="7.5"/>
+<arg name="min_y"     default="3.3"/>
+<arg name="max_y"     default="9.0"/>
+<arg name="min_z"     default="0.5"/>
+<arg name="max_z"     default=" 3.0"/>-->
+
+<!--  Decompressor-->
+<!--  <arg name="filter_value"        default="127" /> -->
+  <arg name="filter_value"        default="80" /> <!--decompressor [0-255]-->
+
+
+  <machine name="master" address="localhost"/>
+  <machine name="jetson1" address="jetson1.wp3.localnet" env-loader="/home/nvidia/catkin_ws/devel/env.sh" user="nvidia" password="nvidia" default="false"/>
+  <machine name="jetson2" address="jetson2.wp3.localnet" env-loader="/home/nvidia/catkin_ws/devel/env.sh" user="nvidia" password="nvidia" default="false"/>
+  <machine name="jetson3" address="jetson3.wp3.localnet" env-loader="/home/nvidia/catkin_ws/devel/env.sh" user="nvidia" password="nvidia" default="false"/>
+  <machine name="jetson4" address="jetson4.wp3.localnet" env-loader="/home/nvidia/catkin_ws/devel/env.sh" user="nvidia" password="nvidia" default="false"/>
+  <machine name="jetson5" address="jetson5.wp3.localnet" env-loader="/home/nvidia/catkin_ws/devel/env.sh" user="nvidia" password="nvidia" default="false"/>
+  <machine name="jetson6" address="jetson6.wp3.localnet" env-loader="/home/nvidia/catkin_ws/devel/env.sh" user="nvidia" password="nvidia" default="false"/>
+  <machine name="jetson7" address="jetson7.wp3.localnet" env-loader="/home/nvidia/catkin_ws/devel/env.sh" user="nvidia" password="nvidia" default="false"/>
+
+<!-- =====Execute read of kinect data on sensor nodes and convert to point cloud===== -->
+  <include file="$(find wp3_launch)/k2_bridge.launch">
+<!--    <include file="$(find kinect2_bridge)/launch/kinect2_bridge.launch">-->
+    <arg name="base_name"   value="jetson1" />
+    <arg name="machine"     value="jetson1" />
+    <arg name="calib_path"  value="/home/nvidia/catkin_ws/src/wp3_compressor/calibration_data/"/>
+    <arg name="fps_limit"   value="$(arg fps_limit_kinect)"/>
+    <arg name="max_depth"   value="$(arg max_depth)"/>
+    <arg name="min_depth"   value="$(arg min_depth)"/>
+    <arg name="publish_tf"  value="false"/>
+  </include>
+
+  <include file="$(find wp3_launch)/k2_bridge.launch">
+<!--    <include file="$(find kinect2_bridge)/launch/kinect2_bridge.launch">-->
+    <arg name="base_name"   value="jetson2" />
+    <arg name="machine"     value="jetson2" />
+    <arg name="calib_path"  value="/home/nvidia/catkin_ws/src/wp3_compressor/calibration_data/"/>
+    <arg name="fps_limit"   value="$(arg fps_limit_kinect)"/>
+    <arg name="max_depth"   value="$(arg max_depth)"/>
+    <arg name="min_depth"   value="$(arg min_depth)"/>
+    <arg name="publish_tf"  value="false"/>
+  </include>
+
+  <include file="$(find wp3_launch)/k2_bridge.launch">
+<!--    <include file="$(find kinect2_bridge)/launch/kinect2_bridge.launch">-->
+    <arg name="base_name"   value="jetson3" />
+    <arg name="machine"     value="jetson3" />
+    <arg name="calib_path"  value="/home/nvidia/catkin_ws/src/wp3_compressor/calibration_data/"/>
+    <arg name="fps_limit"   value="$(arg fps_limit_kinect)"/>
+    <arg name="max_depth"   value="$(arg max_depth)"/>
+    <arg name="min_depth"   value="$(arg min_depth)"/>
+    <arg name="publish_tf"  value="false"/>
+  </include>
+
+  <include file="$(find wp3_launch)/k2_bridge.launch">
+<!--    <include file="$(find kinect2_bridge)/launch/kinect2_bridge.launch">-->
+    <arg name="base_name"   value="jetson4" />
+    <arg name="machine"     value="jetson4" />
+    <arg name="calib_path"  value="/home/nvidia/catkin_ws/src/wp3_compressor/calibration_data/"/>
+    <arg name="fps_limit"   value="$(arg fps_limit_kinect)"/>
+    <arg name="max_depth"   value="$(arg max_depth)"/>
+    <arg name="min_depth"   value="$(arg min_depth)"/>
+    <arg name="publish_tf"  value="false"/>
+  </include>
+
+  <include file="$(find wp3_launch)/k2_bridge.launch">
+<!--    <include file="$(find kinect2_bridge)/launch/kinect2_bridge.launch">-->
+    <arg name="base_name"   value="jetson5" />
+    <arg name="machine"     value="jetson5" />
+    <arg name="calib_path"  value="/home/nvidia/catkin_ws/src/wp3_compressor/calibration_data/"/>
+    <arg name="fps_limit"   value="$(arg fps_limit_kinect)"/>
+    <arg name="max_depth"   value="$(arg max_depth)"/>
+    <arg name="min_depth"   value="$(arg min_depth)"/>
+    <arg name="publish_tf"  value="false"/>
+  </include>
+
+  <include file="$(find wp3_launch)/k2_bridge.launch">
+<!--    <include file="$(find kinect2_bridge)/launch/kinect2_bridge.launch">-->
+    <arg name="base_name"   value="jetson6" />
+    <arg name="machine"     value="jetson6" />
+    <arg name="calib_path"  value="/home/nvidia/catkin_ws/src/wp3_compressor/calibration_data/"/>
+    <arg name="fps_limit"   value="$(arg fps_limit_kinect)"/>
+    <arg name="max_depth"   value="$(arg max_depth_jetson6)"/>
+    <arg name="min_depth"   value="$(arg min_depth)"/>
+    <arg name="publish_tf"  value="false"/>
+  </include>
+
+<!--<include file="$(find wp3_launch)/k2_bridge.launch">
+  <arg name="base_name"   value="jetson7" />
+  <arg name="machine"     value="jetson7" />
+  <arg name="calib_path"  value="/home/nvidia/catkin_ws/src/wp3_compressor/calibration_data/"/>
+  <arg name="fps_limit"   value="$(arg fps_limit_kinect)"/>
+  <arg name="max_depth"   value="$(arg max_depth)"/>
+  <arg name="min_depth"   value="$(arg min_depth)"/>
+  <arg name="publish_tf"  value="false"/>
+</include>-->
+
+<!-- =====Execute convertion from depth map to point cloud===== -->
+  <!-- create clouds on master, /master/jetsonX/points_nocolor -->
+  <include file="$(find wp3_launch)/cloudify_master.launch"/>
+  <!-- create clouds on jetson, /jetsonX/wp3/points_nocolor -->
+  <include file="$(find wp3_launch)/cloudify_jetson.launch"/>
+
+
+<!-- ================= Compressor (remote) ======================= -->
+<group if="$(arg run_compressor_remote)">
+  <!-- stuff that will only be evaluated if foo is true -->
+<!--    #define _MINX 0.0
+    #define _MINY 0.0
+    #define _MINZ 0.1
+    #define _MAXX 10.0
+    #define _MAXY 10.0
+    #define _MAXZ 4.0-->
+
+<node pkg="wp3_compressor" type="wp3_compressor_node" name="jetson1_comp_kinect" machine="jetson1">
+    <param name="resolution" value="$(arg voxel_size)" />
+    <param name="input_topic" value="/jetson1/wp3/points_nocolor" />
+    <param name="input_type" value="0" />
+    <param name="output_topic" value="/jetson1/wp3/kinect_comp" />
+    <param name="local_frame" value="jetson1_ir_optical_frame" />
+<!--    <param name="global_frame" value="jetson1_ir_optical_frame" />-->
+    <param name="global_frame" value="world" />
+    <param name="crop"      value="$(arg crop)" />
+    <param name="min_x"     value="$(arg min_x)" />
+    <param name="max_x"     value="$(arg max_x)" />
+    <param name="min_y"     value="$(arg min_y)" />
+    <param name="max_y"     value="$(arg max_y)" />
+    <param name="min_z"     value="$(arg min_z)" />
+    <param name="max_z"     value="$(arg max_z)" />
+</node>
+
+<node pkg="wp3_compressor" type="wp3_compressor_node" name="jetson2_comp_kinect" machine="jetson2">
+    <param name="resolution" value="$(arg voxel_size)" />
+    <param name="input_topic" value="/jetson2/wp3/points_nocolor" />
+    <param name="input_type" value="0" />
+    <param name="output_topic" value="/jetson2/wp3/kinect_comp" />
+    <param name="local_frame" value="jetson2_ir_optical_frame" />
+<!--    <param name="global_frame" value="jetson2_ir_optical_frame" />-->
+    <param name="global_frame" value="world" />
+    <param name="crop"      value="$(arg crop)" />
+    <param name="min_x"     value="$(arg min_x)" />
+    <param name="max_x"     value="$(arg max_x)" />
+    <param name="min_y"     value="$(arg min_y)" />
+    <param name="max_y"     value="$(arg max_y)" />
+    <param name="min_z"     value="$(arg min_z)" />
+    <param name="max_z"     value="$(arg max_z)" />
+</node>
+
+<node pkg="wp3_compressor" type="wp3_compressor_node" name="jetson3_comp_kinect" machine="jetson3">
+    <param name="resolution" value="$(arg voxel_size)" />
+    <param name="input_topic" value="/jetson3/wp3/points_nocolor" />
+    <param name="input_type" value="0" />
+    <param name="output_topic" value="/jetson3/wp3/kinect_comp" />
+    <param name="local_frame" value="jetson3_ir_optical_frame" />
+<!--    <param name="global_frame" value="jetson3_ir_optical_frame" />-->
+    <param name="global_frame" value="world" />
+    <param name="crop"      value="$(arg crop)" />
+    <param name="min_x"     value="$(arg min_x)" />
+    <param name="max_x"     value="$(arg max_x)" />
+    <param name="min_y"     value="$(arg min_y)" />
+    <param name="max_y"     value="$(arg max_y)" />
+    <param name="min_z"     value="$(arg min_z)" />
+    <param name="max_z"     value="$(arg max_z)" />
+</node>
+
+<node pkg="wp3_compressor" type="wp3_compressor_node" name="jetson4_comp_kinect" machine="jetson4">
+    <param name="resolution" value="$(arg voxel_size)" />
+    <param name="input_topic" value="/jetson4/wp3/points_nocolor" />
+    <param name="input_type" value="0" />
+    <param name="output_topic" value="/jetson4/wp3/kinect_comp" />
+    <param name="local_frame" value="jetson4_ir_optical_frame" />
+<!--    <param name="global_frame" value="jetson4_ir_optical_frame" />-->
+    <param name="global_frame" value="world" />
+    <param name="crop"      value="$(arg crop)" />
+    <param name="min_x"     value="$(arg min_x)" />
+    <param name="max_x"     value="$(arg max_x)" />
+    <param name="min_y"     value="$(arg min_y)" />
+    <param name="max_y"     value="$(arg max_y)" />
+    <param name="min_z"     value="$(arg min_z)" />
+    <param name="max_z"     value="$(arg max_z)" />
+</node>
+
+<node pkg="wp3_compressor" type="wp3_compressor_node" name="jetson5_comp_kinect" machine="jetson5">
+    <param name="resolution" value="$(arg voxel_size)" />
+    <param name="input_topic" value="/jetson5/wp3/points_nocolor" />
+    <param name="input_type" value="0" />
+    <param name="output_topic" value="/jetson5/wp3/kinect_comp" />
+    <param name="local_frame" value="jetson5_ir_optical_frame" />
+<!--    <param name="global_frame" value="jetson5_ir_optical_frame" />-->
+    <param name="global_frame" value="world" />
+    <param name="crop"      value="$(arg crop)" />
+    <param name="min_x"     value="$(arg min_x)" />
+    <param name="max_x"     value="$(arg max_x)" />
+    <param name="min_y"     value="$(arg min_y)" />
+    <param name="max_y"     value="$(arg max_y)" />
+    <param name="min_z"     value="$(arg min_z)" />
+    <param name="max_z"     value="$(arg max_z)" />
+</node>
+
+<node pkg="wp3_compressor" type="wp3_compressor_node" name="jetson6_comp_kinect" machine="jetson6">
+    <param name="resolution" value="$(arg voxel_size)" />
+    <param name="input_topic" value="/jetson6/wp3/points_nocolor" />
+    <param name="input_type" value="0" />
+    <param name="output_topic" value="/jetson6/wp3/kinect_comp" />
+    <param name="local_frame" value="jetson6_ir_optical_frame" />
+<!--    <param name="global_frame" value="jetson6_ir_optical_frame" />-->
+    <param name="global_frame" value="world" />
+    <param name="crop"      value="$(arg crop)" />
+    <param name="min_x"     value="$(arg min_x)" />
+    <param name="max_x"     value="$(arg max_x)" />
+    <param name="min_y"     value="$(arg min_y)" />
+    <param name="max_y"     value="$(arg max_y)" />
+    <param name="min_z"     value="$(arg min_z)" />
+    <param name="max_z"     value="$(arg max_z)" />
+</node>
+
+<!--<node pkg="wp3_compressor" type="wp3_compressor_node" name="jetson7_comp_kinect" machine="jetson7">
+    <param name="resolution" value="$(arg voxel_size)" />
+    <param name="input_topic" value="/jetson7/wp3/points_nocolor" />
+    <param name="input_type" value="0" />
+    <param name="output_topic" value="/jetson7/wp3/kinect_comp" />
+    <param name="local_frame" value="jetson7_ir_optical_frame" />
+    <param name="global_frame" value="world" />
+    <param name="floor_cutoff" value="$(arg floor_cut_height)" />
+</node>-->
+
+</group>
+
+
+
+<!-- ================= Compressor (local) ======================= -->
+<group if="$(arg run_compressor_local)">
+
+<node pkg="wp3_compressor" type="wp3_compressor_node" name="jetson1_comp_kinect" machine="master">
+    <param name="resolution" value="$(arg voxel_size)" />
+    <param name="input_topic" value="/master/jetson1/points_nocolor" />
+    <param name="input_type" value="0" />
+    <param name="output_topic" value="/jetson1/wp3/kinect_comp" />
+    <param name="local_frame" value="jetson1_ir_optical_frame" />
+    <param name="global_frame" value="world" />
+    <param name="crop"      value="$(arg crop)" />
+    <param name="min_x"     value="$(arg min_x)" />
+    <param name="max_x"     value="$(arg max_x)" />
+    <param name="min_y"     value="$(arg min_y)" />
+    <param name="max_y"     value="$(arg max_y)" />
+    <param name="min_z"     value="$(arg min_z)" />
+    <param name="max_z"     value="$(arg max_z)" />
+</node>
+
+<node pkg="wp3_compressor" type="wp3_compressor_node" name="jetson2_comp_kinect" machine="master">
+    <param name="resolution" value="$(arg voxel_size)" />
+    <param name="input_topic" value="/master/jetson2/points_nocolor" />
+    <param name="input_type" value="0" />
+    <param name="output_topic" value="/jetson2/wp3/kinect_comp" />
+    <param name="local_frame" value="jetson2_ir_optical_frame" />
+    <param name="global_frame" value="world" />
+    <param name="crop"      value="$(arg crop)" />
+    <param name="min_x"     value="$(arg min_x)" />
+    <param name="max_x"     value="$(arg max_x)" />
+    <param name="min_y"     value="$(arg min_y)" />
+    <param name="max_y"     value="$(arg max_y)" />
+    <param name="min_z"     value="$(arg min_z)" />
+    <param name="max_z"     value="$(arg max_z)" />
+</node>
+
+<node pkg="wp3_compressor" type="wp3_compressor_node" name="jetson3_comp_kinect" machine="master">
+    <param name="resolution" value="$(arg voxel_size)" />
+    <param name="input_topic" value="/master/jetson3/points_nocolor" />
+    <param name="input_type" value="0" />
+    <param name="output_topic" value="/jetson3/wp3/kinect_comp" />
+    <param name="local_frame" value="jetson3_ir_optical_frame" />
+    <param name="global_frame" value="world" />
+    <param name="crop"      value="$(arg crop)" />
+    <param name="min_x"     value="$(arg min_x)" />
+    <param name="max_x"     value="$(arg max_x)" />
+    <param name="min_y"     value="$(arg min_y)" />
+    <param name="max_y"     value="$(arg max_y)" />
+    <param name="min_z"     value="$(arg min_z)" />
+    <param name="max_z"     value="$(arg max_z)" />
+</node>
+
+<node pkg="wp3_compressor" type="wp3_compressor_node" name="jetson4_comp_kinect" machine="master">
+    <param name="resolution" value="$(arg voxel_size)" />
+    <param name="input_topic" value="/master/jetson4/points_nocolor" />
+    <param name="input_type" value="0" />
+    <param name="output_topic" value="/jetson4/wp3/kinect_comp" />
+    <param name="local_frame" value="jetson4_ir_optical_frame" />
+    <param name="global_frame" value="world" />
+    <param name="crop"      value="$(arg crop)" />
+    <param name="min_x"     value="$(arg min_x)" />
+    <param name="max_x"     value="$(arg max_x)" />
+    <param name="min_y"     value="$(arg min_y)" />
+    <param name="max_y"     value="$(arg max_y)" />
+    <param name="min_z"     value="$(arg min_z)" />
+    <param name="max_z"     value="$(arg max_z)" />
+</node>
+
+<node pkg="wp3_compressor" type="wp3_compressor_node" name="jetson5_comp_kinect" machine="master">
+    <param name="resolution" value="$(arg voxel_size)" />
+    <param name="input_topic" value="/master/jetson5/points_nocolor" />
+    <param name="input_type" value="0" />
+    <param name="output_topic" value="/jetson5/wp3/kinect_comp" />
+    <param name="local_frame" value="jetson5_ir_optical_frame" />
+    <param name="global_frame" value="world" />
+    <param name="crop"      value="$(arg crop)" />
+    <param name="min_x"     value="$(arg min_x)" />
+    <param name="max_x"     value="$(arg max_x)" />
+    <param name="min_y"     value="$(arg min_y)" />
+    <param name="max_y"     value="$(arg max_y)" />
+    <param name="min_z"     value="$(arg min_z)" />
+    <param name="max_z"     value="$(arg max_z)" />
+</node>
+
+<node pkg="wp3_compressor" type="wp3_compressor_node" name="jetson6_comp_kinect" machine="master">
+    <param name="resolution" value="$(arg voxel_size)" />
+    <param name="input_topic" value="/master/jetson6/points_nocolor" />
+    <param name="input_type" value="0" />
+    <param name="output_topic" value="/jetson6/wp3/kinect_comp" />
+    <param name="local_frame" value="jetson6_ir_optical_frame" />
+    <param name="global_frame" value="world" />
+    <param name="crop"      value="$(arg crop)" />
+    <param name="min_x"     value="$(arg min_x)" />
+    <param name="max_x"     value="$(arg max_x)" />
+    <param name="min_y"     value="$(arg min_y)" />
+    <param name="max_y"     value="$(arg max_y)" />
+    <param name="min_z"     value="$(arg min_z)" />
+    <param name="max_z"     value="$(arg max_z)" />
+</node>
+
+</group>
+
+
+<!-- ================= People Detector (remote) ======================= -->
+<group if="$(arg run_peopledetector)">
+  <include file="$(find darknet_ros)/launch/all_nodes.launch"/>
+</group>
+
+
+
+
+<!-- ================= Decompressor (local) ======================= -->
+<!-- ================= Jetson1 ======================= -->
+<node pkg="wp3_decompressor" type="wp3_decompressor_node" name="jetson1_decomp_kinect">
+    <param name="sensor_name" value="jetson1" />
+<!--    <param name="sensor_frame" value="jetson1_ir_optical_frame" />-->
+    <param name="sensor_frame" value="world" />
+    <param name="sensor_type" value="0" />
+    <param name="filter_value" value="$(arg filter_value)" />
+</node>
+<!-- ================= Jetson2 ======================= -->
+<node pkg="wp3_decompressor" type="wp3_decompressor_node" name="jetson2_decomp_kinect">
+    <param name="sensor_name" value="jetson2" />
+<!--    <param name="sensor_frame" value="jetson2_ir_optical_frame" />-->
+    <param name="sensor_frame" value="world" />
+    <param name="sensor_type" value="0" />
+    <param name="filter_value" value="$(arg filter_value)" />
+</node>
+<!-- ================= Jetson3 ======================= -->
+<node pkg="wp3_decompressor" type="wp3_decompressor_node" name="jetson3_decomp_kinect">
+    <param name="sensor_name" value="jetson3" />
+<!--    <param name="sensor_frame" value="jetson3_ir_optical_frame" />-->
+    <param name="sensor_frame" value="world" />
+    <param name="sensor_type" value="0" />
+    <param name="filter_value" value="$(arg filter_value)" />
+</node>
+<!-- ================= Jetson4 ======================= -->
+<node pkg="wp3_decompressor" type="wp3_decompressor_node" name="jetson4_decomp_kinect">
+    <param name="sensor_name" value="jetson4" />
+<!--    <param name="sensor_frame" value="jetson4_ir_optical_frame" />-->
+    <param name="sensor_frame" value="world" />
+    <param name="sensor_type" value="0" />
+    <param name="filter_value" value="$(arg filter_value)" />
+</node>
+<!-- ================= Jetson5 ======================= -->
+<node pkg="wp3_decompressor" type="wp3_decompressor_node" name="jetson5_decomp_kinect">
+    <param name="sensor_name" value="jetson5" />
+    <param name="sensor_frame" value="world" />
+<!--    <param name="sensor_frame" value="jetson5_ir_optical_frame" />-->
+    <param name="sensor_type" value="0" />
+    <param name="filter_value" value="$(arg filter_value)" />
+</node>
+<!-- ================= Jetson6 KINECT ======================= -->
+<node pkg="wp3_decompressor" type="wp3_decompressor_node" name="jetson6_decomp_kinect">
+    <param name="sensor_name" value="jetson6" />
+<!--    <param name="sensor_frame" value="jetson6_ir_optical_frame" />-->
+    <param name="sensor_frame" value="world" />
+    <param name="sensor_type" value="0" />
+    <param name="filter_value" value="$(arg filter_value)" />
+</node>
+<!-- ================= Jetson7 KINECT ======================= -->
+<!--<node pkg="wp3_decompressor" type="wp3_decompressor_node" name="jetson7_decomp_kinect">
+    <param name="sensor_name" value="jetson7" />
+    <param name="sensor_type" value="0" />
+    <param name="filter_value" value="$(arg filter_value)" />
+</node>-->
+<!-- ================= Jetson6 VELODYNE ======================= -->
+<!--<node pkg="wp3_decompressor" type="wp3_decompressor_node" name="jetson6_decomp_velodyne">
+    <param name="sensor_name" value="jetson6" />
+    <param name="sensor_type" value="1" />
+    <param name="filter_value" value="$arg filter_value" />
+</node>-->
+
+<!-- ================= Transform pointclouds to camera frame (local) ======================= -->
+<node pkg="nodelet" type="nodelet" name="transform_nodelet1"  args="manager" output="screen"/>
+<node pkg="nodelet" type="nodelet" name="transform_nodelet2"  args="manager" output="screen"/>
+<node pkg="nodelet" type="nodelet" name="transform_nodelet3"  args="manager" output="screen"/>
+<node pkg="nodelet" type="nodelet" name="transform_nodelet4"  args="manager" output="screen"/>
+<node pkg="nodelet" type="nodelet" name="transform_nodelet5"  args="manager" output="screen"/>
+<node pkg="nodelet" type="nodelet" name="transform_nodelet6"  args="manager" output="screen"/>
+
+<node pkg="nodelet" type="nodelet" name="pointcloud_transformer1" args="load transform_pointcloud/transformPointcloud transform_nodelet1" output="screen">
+    <param name="to_frame" value="jetson1_ir_optical_frame"/>
+    <remap from="~input_pcl2" to="/master/jetson1/kinect_decomp"/>
+    <remap from="~output_pcl2" to="/master/jetson1/points_camframe"/>
+</node>
+<node pkg="nodelet" type="nodelet" name="pointcloud_transformer2" args="load transform_pointcloud/transformPointcloud transform_nodelet1" output="screen">
+    <param name="to_frame" value="jetson2_ir_optical_frame"/>
+    <remap from="~input_pcl2" to="/master/jetson2/kinect_decomp"/>
+    <remap from="~output_pcl2" to="/master/jetson2/points_camframe"/>
+</node>
+<node pkg="nodelet" type="nodelet" name="pointcloud_transformer3" args="load transform_pointcloud/transformPointcloud transform_nodelet1" output="screen">
+    <param name="to_frame" value="jetson3_ir_optical_frame"/>
+    <remap from="~input_pcl2" to="/master/jetson3/kinect_decomp"/>
+    <remap from="~output_pcl2" to="/master/jetson3/points_camframe"/>
+</node>
+<node pkg="nodelet" type="nodelet" name="pointcloud_transformer4" args="load transform_pointcloud/transformPointcloud transform_nodelet1" output="screen">
+    <param name="to_frame" value="jetson4_ir_optical_frame"/>
+    <remap from="~input_pcl2" to="/master/jetson4/kinect_decomp"/>
+    <remap from="~output_pcl2" to="/master/jetson4/points_camframe"/>
+</node>
+<node pkg="nodelet" type="nodelet" name="pointcloud_transformer5" args="load transform_pointcloud/transformPointcloud transform_nodelet1" output="screen">
+    <param name="to_frame" value="jetson5_ir_optical_frame"/>
+    <remap from="~input_pcl2" to="/master/jetson5/kinect_decomp"/>
+    <remap from="~output_pcl2" to="/master/jetson5/points_camframe"/>
+</node>
+<node pkg="nodelet" type="nodelet" name="pointcloud_transformer6" args="load transform_pointcloud/transformPointcloud transform_nodelet1" output="screen">
+    <param name="to_frame" value="jetson6_ir_optical_frame"/>
+    <remap from="~input_pcl2" to="/master/jetson6/kinect_decomp"/>
+    <remap from="~output_pcl2" to="/master/jetson6/points_camframe"/>
+</node>
+<!-- ================= Transform pointclouds to camera frame (local) ======================= -->
+
+
+<!-- ================= Transform pointclouds to camera frame (local) ======================= -->
+<!--<node pkg="nodelet" type="nodelet" name="transform_nodelet"  args="manager" output="screen"/>
+
+<node pkg="nodelet" type="nodelet" name="pointcloud_transformer1full" args="load transform_pointcloud/transformPointcloud transform_nodelet" output="screen">
+    <param name="to_frame" value="jetson1_ir_optical_frame"/>
+    <remap from="~input_pcl2" to="/master/jetson1/points_nocolor"/>
+    <remap from="~output_pcl2" to="/master/jetson1/points_camframe"/>
+</node>
+<node pkg="nodelet" type="nodelet" name="pointcloud_transformer2full" args="load transform_pointcloud/transformPointcloud transform_nodelet" output="screen">
+    <param name="to_frame" value="jetson2_ir_optical_frame"/>
+    <remap from="~input_pcl2" to="/master/jetson2/points_nocolor"/>
+    <remap from="~output_pcl2" to="/master/jetson2/points_camframe"/>
+</node>
+<node pkg="nodelet" type="nodelet" name="pointcloud_transformer3full" args="load transform_pointcloud/transformPointcloud transform_nodelet" output="screen">
+    <param name="to_frame" value="jetson3_ir_optical_frame"/>
+    <remap from="~input_pcl2" to="/master/jetson3/points_nocolor"/>
+    <remap from="~output_pcl2" to="/master/jetson3/points_camframe"/>
+</node>
+<node pkg="nodelet" type="nodelet" name="pointcloud_transformer4full" args="load transform_pointcloud/transformPointcloud transform_nodelet" output="screen">
+    <param name="to_frame" value="jetson4_ir_optical_frame"/>
+
+    <remap from="~input_pcl2" to="/master/jetson4/points_nocolor"/>
+    <remap from="~output_pcl2" to="/master/jetson4/points_camframe"/>
+</node>
+<node pkg="nodelet" type="nodelet" name="pointcloud_transformer5full" args="load transform_pointcloud/transformPointcloud transform_nodelet" output="screen">
+    <param name="to_frame" value="jetson5_ir_optical_frame"/>
+    <remap from="~input_pcl2" to="/master/jetson5/points_nocolor"/>
+    <remap from="~output_pcl2" to="/master/jetson5/points_camframe"/>
+</node>
+<node pkg="nodelet" type="nodelet" name="pointcloud_transformer6full" args="load transform_pointcloud/transformPointcloud transform_nodelet" output="screen">
+    <param name="to_frame" value="jetson6_ir_optical_frame"/>
+    <remap from="~input_pcl2" to="/master/jetson6/points_nocolor"/>
+    <remap from="~output_pcl2" to="/master/jetson6/points_camframe"/>
+</node>-->
+<!-- ================= Transform pointclouds to camera frame (local) ======================= -->
+
+
+
+<!-- ================= Velodyne VLP-16 ======================= -->
+
+<!--  <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch">-->
+<!--        <arg name="machine" value="master" />-->
+<!--  </include>-->
+<!--<include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch"></include>-->
+
+
+<!-- ================= Carnegie Multisense ======================= -->
+
+<!--  <include file="$(find multisense_bringup)/multisense.launch">
+        <arg name="ip_address" value="10.225.120.161" />
+          <arg name="sensor"     value="S21" />
+    <arg name="launch_robot_state_publisher" value="false" />
+    <arg name="mtu" value="1500" />
+    <param name="/multisense/resolution"  value="1024x1024x256" />
+  </include>-->
+
+
+
+  <!-- ROS Driver -->
+<!--   <node pkg="multisense_ros" ns="multisense" type="ros_driver" name="multisense_driver" output="screen">
+     <param name="sensor_ip"   value="10.225.120.161" />
+     <param name="sensor_mtu"  value="7200" />
+     <param name="tf_prefix"  value="multisense" />
+     <param name="machine"    value="jetson6" />
+  </node>-->
+
+  <!-- Color Laser PointCloud Publisher -->
+<!--   <node pkg="multisense_ros" ns="multisense" type="color_laser_publisher" name="multisense_color_laser_publisher" output="screen">
+      <remap from="image_rect_color" to="/multisense/left/image_rect_color" />
+      <remap from="lidar_points2" to="/multisense/lidar_points2" />
+      <remap from="camera_info" to="/multisense/left/image_rect_color/camera_info" />
+      <param name="machine"    value="jetson6" />
+  </node>-->
+
+
+<!-- ===== Publishing TFs ===== -->
+<include file="$(find wp3_launch)/start_mil_tf.launch"/>
+
+<!-- Robot placement -->
+<!--<node pkg="tf" type="static_transform_publisher" name="robot1_insert"
+   args="7.000 3.6645 0.000 1.57079632 0 0 world robot1_tf/track_start 100"/>
+-->
+
+<!--
+  <node pkg="tf" type="static_transform_publisher" name="robot1_insert"
+   args="0 0 0 0 0 0 world robot1_tf/world 100"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="robot1sim_insert"
+   args="0 0 0 0 0 0 world robot1sim_tf/world 100"/>
+   -->
+
+
+<!--
+<node pkg="wp3_decompressor" type="wp3_decompressor_node" name="master_jetson6_decompressor" machine="master">
+    <param name="sensor_name" value="jetson6" />
+    <param name="filter_value" value="3" />
+</node>
+-->
+
+<!--
+<node pkg="wp3_decompressor" type="wp3_decompressor_node" name="master_jetson7_decompressor" machine="master">
+    <param name="sensor_name" value="jetson7" />
+    <param name="filter_value" value="3" />
+    <param name="sensor_type" value="1" />
+</node>
+-->
+
+
+<!--<node name="collision_map" pkg="p26_pick_and_place" type="collision_map" respawn="false" output="screen"/>-->
+
+
+</launch>

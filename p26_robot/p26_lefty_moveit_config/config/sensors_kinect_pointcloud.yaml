@@ -1,6 +1,6 @@
 sensors:
   - sensor_plugin: occupancy_map_monitor/PointCloudOctomapUpdater
-    point_cloud_topic: /jetson/wp3/points_nocolor_merged
+    point_cloud_topic: /master/merged_point_cloud
     max_range: 15.0
     point_subsample: 1
     padding_offset: 0.1

@@ -10,6 +10,7 @@
 #include <pcl/sample_consensus/model_types.h>
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/common/distances.h>
+#include <pcl/filters/statistical_outlier_removal.h>
 #include "pcl_ros/point_cloud.h"
 #include <boost/foreach.hpp>
 #include <iostream>

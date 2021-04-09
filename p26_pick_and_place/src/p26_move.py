@@ -306,9 +306,9 @@ class MoveGroupPickAndPlace(object):
     pose_goal.orientation.z = q[2]
     pose_goal.orientation.w = q[3]
 
-    pose_goal.position.x = x+0.2*U[0]
-    pose_goal.position.y = y+0.2*U[1]
-    pose_goal.position.z = z+0.2*U[2]
+    pose_goal.position.x = x+0.16*U[0]
+    pose_goal.position.y = y+0.16*U[1]
+    pose_goal.position.z = z+0.16*U[2]
     group.set_pose_target(pose_goal)
 
     ## Now, we call the planner to compute the plan and execute it.
@@ -446,9 +446,9 @@ def main():
     print "============ Press `Enter` when the cylinder is physically attatched..."
     raw_input()
 
-    tutorial.go_to_joint_state()
+#    tutorial.go_to_joint_state()
 
-    tutorial.go_to_pose_goal(cylinder_com.x+0.16, cylinder_com.y, cylinder_com.z+0.1, cylinder_dirvec.x, cylinder_dirvec.y, cylinder_dirvec.z)
+    tutorial.go_to_pose_goal(5.2, 9, 0.65, 0, 0, 1)
 
     # Create table obstacle
 #    planning_scene.removeCollisionObject('floor')

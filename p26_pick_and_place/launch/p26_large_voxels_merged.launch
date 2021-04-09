@@ -192,7 +192,7 @@
     <param name="filter_value" value="$(arg filter_value)" />
 </node>
 
-<!-- ================= Jetson7 KINECT ======================= -->
+<!-- ================= J/transform_nodelet1etson7 KINECT ======================= -->
 <!--<node pkg="p26_decompressor" type="p26_decompressor_node" name="jetson7_decomp_kinect">
     <param name="sensor_name" value="jetson7" />
     <param name="sensor_type" value="0" />

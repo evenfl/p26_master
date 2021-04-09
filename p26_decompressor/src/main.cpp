@@ -29,9 +29,7 @@ int main(int argc, char **argv)
   signal(SIGINT, killHandler);
   signal(SIGTERM, killHandler);
 
-  if(!nh.hasParam("sensor_name"))
-    ROS_ERROR("%s","Missing _sensor_name:=<name> parameter! Shutting down...");
-  else if(!nh.hasParam("filter_value"))
+  if(!nh.hasParam("filter_value"))
     ROS_ERROR("%s","Missing _filter_value:=<intensity> parameter! Shutting down...");
   else if(!nh.hasParam("sensor_type"))
     ROS_ERROR("%s","Missing _sensor_type:=<0: Kinect, 1: Velodyne> parameter! Shutting down...");

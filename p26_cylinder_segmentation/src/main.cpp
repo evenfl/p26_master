@@ -17,12 +17,13 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "sub_pcl");
   ros::NodeHandle nh;
-  ros::Subscriber sub1 = nh.subscribe ("/master/jetson1/kinect_decomp", 1, callback);
-  ros::Subscriber sub2 = nh.subscribe ("/master/jetson2/kinect_decomp", 1, callback);
-  ros::Subscriber sub3 = nh.subscribe ("/master/jetson3/kinect_decomp", 1, callback);
-  ros::Subscriber sub4 = nh.subscribe ("/master/jetson4/kinect_decomp", 1, callback);
-  ros::Subscriber sub5 = nh.subscribe ("/master/jetson5/kinect_decomp", 1, callback);
-  ros::Subscriber sub6 = nh.subscribe ("/master/jetson6/kinect_decomp", 1, callback);
+//  ros::Subscriber sub1 = nh.subscribe ("/master/jetson1/kinect_decomp", 1, callback);
+//  ros::Subscriber sub2 = nh.subscribe ("/master/jetson2/kinect_decomp", 1, callback);
+//  ros::Subscriber sub3 = nh.subscribe ("/master/jetson3/kinect_decomp", 1, callback);
+//  ros::Subscriber sub4 = nh.subscribe ("/master/jetson4/kinect_decomp", 1, callback);
+//  ros::Subscriber sub5 = nh.subscribe ("/master/jetson5/kinect_decomp", 1, callback);
+//  ros::Subscriber sub6 = nh.subscribe ("/master/jetson6/kinect_decomp", 1, callback);
+  ros::Subscriber sub6 = nh.subscribe ("/master/merged_point_cloud", 1, callback);
 //  ros::Publisher pub = nh.advertise<PointCloud> ("cloud_cylinder", 1);
   ros::Publisher cylinder_object_publisher = nh.advertise<moveit_msgs::CollisionObject>("collision_object", 1);
   ros::Publisher pub_com = nh.advertise<geometry_msgs::Point> ("cylinder_com", 1);
@@ -51,7 +52,7 @@ int main(int argc, char** argv)
   {
     ros::spinOnce();
     rate.sleep();
-    if (counter >= 6)
+    if (counter >= 1)
     {
       // If all pointclouds are received, find the pose
 
@@ -220,8 +221,9 @@ int main(int argc, char** argv)
 
 void callback(const sensor_msgs::PointCloud2ConstPtr& input)
 {
+  cloud_merged->clear();
   pcl::PointCloud<PointT> cloud;
   pcl::fromROSMsg (*input, cloud);//cloud is the output
-  *cloud_merged += cloud;
+  *cloud_merged = cloud;
   counter++;
 }

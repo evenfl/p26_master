@@ -139,11 +139,13 @@ pcl::PointCloud<PointT>::Ptr segment(const pcl::PointCloud<PointT>::Ptr& input, 
   seg.setOptimizeCoefficients (true);
   seg.setModelType (pcl::SACMODEL_CYLINDER);
   seg.setMethodType (pcl::SAC_RANSAC);
+//  seg.setNormalDistanceWeight (0.2); //0.01 works (0.1 seperated the robot from the cylinder)
   seg.setNormalDistanceWeight (0.2); //0.01 works (0.1 seperated the robot from the cylinder)
   seg.setMaxIterations (10000);
   //seg.setDistanceThreshold (0.05);
   seg.setDistanceThreshold (0.08);//0.1 works
   seg.setRadiusLimits (cylinderRadius-0.03, cylinderRadius+0.03);//0.08, 0.16 works
+//  seg.setRadiusLimits (cylinderRadius-0.02, cylinderRadius+0.02);//0.08, 0.16 works
   seg.setInputCloud (cloud_filtered2);
   seg.setInputNormals (cloud_normals2);
 
@@ -158,7 +160,8 @@ pcl::PointCloud<PointT>::Ptr segment(const pcl::PointCloud<PointT>::Ptr& input, 
   pcl::PointCloud<PointT>::Ptr cloud_cylinder (new pcl::PointCloud<PointT> ());
   extract.filter (*cloud_cylinder);
   if (cloud_cylinder->points.empty ())
-    std::cerr << "Can't find the cylindrical component." << std::endl;
+//    std::cerr << "Can't find the cylindrical component." << std::endl;
+    std::cerr << "x";
   else
   {
     //std::cerr << "PointCloud representing the cylindrical component: " << cloud_cylinder->size () << " data points." << std::endl;

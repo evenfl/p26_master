@@ -20,12 +20,13 @@
 
   <arg name="voxel_size" default="0.04"/>
   <arg name="crop"      default="true"/>
+<!--  <arg name="min_x"     default="0.5"/>-->
   <arg name="min_x"     default="4.0"/>
   <arg name="max_x"     default="9.5"/>
   <arg name="min_y"     default="0.5"/>
   <arg name="max_y"     default="9.5"/>
-  <!--<arg name="min_z"     default="0.1"/>-->
-  <arg name="min_z"     default="-0.1"/>
+<!--  <arg name="min_z"     default="-0.1"/>-->
+  <arg name="min_z"     default="0.0"/>
   <arg name="max_z"     default=" 4.3"/>
 
 <!--  ICRA2020 parameters Compressor, AAA -->

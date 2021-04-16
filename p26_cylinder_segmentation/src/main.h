@@ -32,12 +32,13 @@ typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
 
 
 //const double cylinderDiameter = 0.169; // Yellow pipe in lab
-const double cylinderDiameter = 0.25;
+const double cylinderDiameter = 0.26;
+//const double cylinderDiameter = 0.16;
 const double cylinderRadius = cylinderDiameter/2;
 //const double cylinderLength = 0.53; // Yellow pipe in lab
 const double cylinderLength = 1.2;
 
-const float x_min = 3.0;
+const float x_min = 4.2;
 const float x_max = 6.0;
 const float y_min = 1.0;
 const float y_max = 10.0;

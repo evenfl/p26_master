@@ -12,7 +12,6 @@ def gripper_pos(data):
 
 
 def gripper_wait():
-    rospy.Subscriber("p26_lefty/gripper", Int64, gripper_pos)
     rospy.wait_for_message("p26_lefty/gripper", Int64, timeout=None)
 
     return gripper_position
@@ -21,6 +20,7 @@ def gripper_wait():
 def main():
 
     pub = rospy.Publisher('p26_lefty/gripper', Int64, queue_size=100)
+    rospy.Subscriber("p26_lefty/gripper", Int64, gripper_pos)
     rospy.init_node('gripper_command', anonymous=True)
     rate = rospy.Rate(10) # 10hz
 

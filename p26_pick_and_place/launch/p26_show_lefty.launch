@@ -7,9 +7,17 @@
 -->
 <launch>
 
+<group ns="p26_lefty">
   <include file="$(find p26_pick_and_place)/launch/p26_moveit_planning_execution.launch">
     <arg name="mode" value="real" />
   </include>
+</group>
+
+
+
+<!--<machine name="p26_gripper" address="p26_raspberry.wp3.localnet" env-loader="/home/ubuntu/catkin_ws/devel/env.sh" user="ubuntu" password="ubuntu" default="false"/>-->
+<!--<node machine="p26_gripper" name="p26_gripper" pkg="p26_gripper" type="gripping.py" />-->
+
 
 </launch>
 

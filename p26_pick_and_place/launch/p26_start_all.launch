@@ -7,6 +7,11 @@
 <!--  <arg name="mode" value="real" />-->
 <!--</include>-->
 
+
+<machine name="p26_gripper" address="p26_raspberry.wp3.localnet" env-loader="/home/ubuntu/catkin_ws/devel/env.sh" user="ubuntu" password="ubuntu" default="false"/>
+<node machine="p26_gripper" name="p26_gripper" pkg="p26_gripper" type="gripping.py" />
+
+
 <group ns="p26_lefty">
 <!--<include file="$(find p26_lefty_moveit_config)/launch/demo.launch"/>-->
 <include file="$(find p26_pick_and_place)/launch/p26_moveit_planning_execution.launch">
@@ -19,10 +24,10 @@
 </group>
 
 
-<!--<node name="collision_map" pkg="p26_pick_and_place" type="collision_map" respawn="false" output="screen"/>-->
+<node name="collision_map" pkg="p26_pick_and_place" type="collision_map" respawn="false" output="screen"/>
 
 <group ns="p26_lefty">
-<node name="p26_pick_and_place" pkg="p26_pick_and_place" type="p26_move.py" respawn="false" output="screen">
+<node name="p26_pick_and_place" pkg="p26_pick_and_place" type="p26_move_with_gripper.py" respawn="false" output="screen">
 </node>
 </group>
 

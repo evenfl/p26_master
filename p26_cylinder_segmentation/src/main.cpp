@@ -8,9 +8,7 @@ PointCloud::Ptr cloud_merged (new PointCloud);
 PointCloud::Ptr cloud_cylinder (new PointCloud);
 PointCloud::Ptr cloud_cylinder_tmp (new PointCloud);
 void callback(const sensor_msgs::PointCloud2ConstPtr& input);
-void callback_find_cylinder(const std_msgs::String::ConstPtr& data);
 int counter = 0;
-bool findCylinder = true;
 
 // Declare a variable of type AddCylinderParams and store relevant values from ModelCoefficients.
 AddCylinderParams cylinder_params;
@@ -25,12 +23,10 @@ int main(int argc, char** argv)
   ros::Subscriber sub4 = nh.subscribe ("/master/jetson4/kinect_decomp", 1, callback);
   ros::Subscriber sub5 = nh.subscribe ("/master/jetson5/kinect_decomp", 1, callback);
   ros::Subscriber sub6 = nh.subscribe ("/master/jetson6/kinect_decomp", 1, callback);
-  ros::Subscriber sub_find_cylinder = nh.subscribe ("/p26_lefty/find_cylinder", 1, callback_find_cylinder);
-//  ros::Subscriber sub6 = nh.subscribe ("/master/merged_point_cloud", 1, callback);
-  ros::Publisher pub = nh.advertise<PointCloud> ("cloud_cylinder", 1);
-  ros::Publisher cylinder_object_publisher = nh.advertise<moveit_msgs::CollisionObject>("collision_object", 1);
-  ros::Publisher pub_com = nh.advertise<geometry_msgs::Point> ("cylinder_com", 1);
-  ros::Publisher pub_dirvec = nh.advertise<geometry_msgs::Point> ("cylinder_dirvec", 1);
+//  ros::Publisher pub = nh.advertise<PointCloud> ("cloud_cylinder", 1);
+  //ros::Publisher cylinder_object_publisher = nh.advertise<moveit_msgs::CollisionObject>("collision_object", 1);
+  //ros::Publisher pub_com = nh.advertise<geometry_msgs::Point> ("cylinder_com", 1);
+  //ros::Publisher pub_dirvec = nh.advertise<geometry_msgs::Point> ("cylinder_dirvec", 1);
 
   ros::Rate rate(20);
 
@@ -38,10 +34,34 @@ int main(int argc, char** argv)
 
   PointT point_com_avg;
   PointT dirvec_avg;
-  const int nrOfIterations = 20;
-//  const int nrOfIterations = 2;
-  const float deviance = 0.06; // For 26 cm cylinder
-//  const float deviance = 0.1; // For 16 cm cylinder
+  int nrOfIterations = 20;
+
+
+
+
+  //For testing results
+  nrOfIterations = 1;
+  int nrOfSamples = 0;
+  PointT correctcom;
+  correctcom.x = 5.2751022105+0.022;
+  correctcom.y = 5.2885478721+0.0226;
+  correctcom.z = 0.0022119397+0.6+0.0574;//+0.155
+
+
+  //correctcom.x = 5.2751022105;
+  //correctcom.y = 5.2885478721;
+  //correctcom.z = 0.0022119397+0.6+0.155;
+
+  PointT correctdirvec;
+  correctdirvec.x = 0;
+  correctdirvec.y = 0;
+  correctdirvec.z = 1;
+  double avg_com_error = 0.0;
+  double avg_dirvec_error = 0.0;
+  int maxNrOfSamples = 1000;
+
+
+  const float deviance = 0.06;
 
   unsigned int inconsistencyCounter = 0;
 
@@ -57,8 +77,7 @@ int main(int argc, char** argv)
   {
     ros::spinOnce();
     rate.sleep();
-
-    if (counter >= 6 && findCylinder == true)
+    if (counter >= 6)
     {
       // If all pointclouds are received, find the pose
 
@@ -148,7 +167,7 @@ int main(int argc, char** argv)
         dirvec_avg.z = dirvec.z;
         iterations++;
         inconsistencyCounter = 0;
-        std::cerr << "#";
+        //std::cerr << "#";
       }
 
       if ( std::abs(dirvec.x - dirvec_avg.x) > 0.5 || std::abs(dirvec.y - dirvec_avg.y) > 0.5 || std::abs(dirvec.z - dirvec_avg.z) > 0.5  )
@@ -159,7 +178,7 @@ int main(int argc, char** argv)
       }
 
 
-      if ( std::abs(point_com.x - point_com_avg.x) > deviance || std::abs(point_com.z - point_com_avg.z) > deviance || std::abs(point_com.z - point_com_avg.z) > deviance && point_com.x != 0 )
+      if ( std::abs(point_com.x - point_com_avg.x) > deviance || std::abs(point_com.z - point_com_avg.z) > deviance || std::abs(point_com.z - point_com_avg.z) > deviance  )
       {
         inconsistencyCounter++;
         std::cerr << "-";
@@ -180,26 +199,27 @@ int main(int argc, char** argv)
         dirvec_avg.z = (dirvec_avg.z*iterations + dirvec.z)/(iterations+1);
         iterations++;
         //inconsistencyCounter = 0;
-        std::cerr << "#" << iterations;
+        //std::cerr << "#";
       }
       if (iterations >= nrOfIterations)
       {
         //cylinder_object_publisher.publish(addCylinder(cylinder_params));
-        std::cerr << std::endl << "Direction vector: [ " << dirvec_avg.x << ", " << dirvec_avg.y << ", " << dirvec_avg.z << " ]" << std::endl;
-        std::cerr << std::endl << "Centre of mass:   [ " << point_com_avg.x << ", " << point_com_avg.y << ", " << point_com_avg.z << " ]" << std::endl << std::endl;
-        iterations = 0;
+        //UNCOMMENT THIS:
+        //std::cerr << std::endl << "Direction vector: [ " << dirvec_avg.x << ", " << dirvec_avg.y << ", " << dirvec_avg.z << " ]" << std::endl;
+        //std::cerr << std::endl << "Centre of mass:   [ " << point_com_avg.x << ", " << point_com_avg.y << ", " << point_com_avg.z << " ]" << std::endl << std::endl;
+
 
         cylinder_params.center_pt[0] = point_com_avg.x;
         cylinder_params.center_pt[1] = point_com_avg.y;
         cylinder_params.center_pt[2] = point_com_avg.z;
 
-        cylinder_params.height = cylinderLength;
-        cylinder_params.radius = cylinderRadius;
+        cylinder_params.height = cylinderLength*1.1;
+        cylinder_params.radius = cylinderRadius*1.1;
 
         cylinder_params.direction_vec[0] = dirvec_avg.x;
         cylinder_params.direction_vec[1] = dirvec_avg.y;
         cylinder_params.direction_vec[2] = dirvec_avg.z;
-        cylinder_object_publisher.publish(addCylinder(cylinder_params));
+        //cylinder_object_publisher.publish(addCylinder(cylinder_params));
         geometry_msgs::Point pub_com_msg;
         geometry_msgs::Point pub_dirvec_msg;
         pub_com_msg.x = point_com_avg.x;
@@ -208,47 +228,87 @@ int main(int argc, char** argv)
         pub_dirvec_msg.x = dirvec_avg.x;
         pub_dirvec_msg.y = dirvec_avg.y;
         pub_dirvec_msg.z = dirvec_avg.z;
-        pub_com.publish(pub_com_msg);
-        pub_dirvec.publish(pub_dirvec_msg);
-
-
-        moveit_msgs::CollisionObject collision_object;
-        collision_object.header.frame_id = "world";
-        collision_object.id = "box";
-
-        shape_msgs::SolidPrimitive primitive;
-        primitive.type = primitive.BOX;
-        primitive.dimensions.resize(3);
-        primitive.dimensions[0] = 0.3;
-        primitive.dimensions[1] = 0.4;
-        primitive.dimensions[2] = 0.25;
-        geometry_msgs::Pose box_pose;
-        box_pose.orientation.w = 1.0;
-        box_pose.position.x = 5.42;
-        box_pose.position.y = 9.23;
-        box_pose.position.z = 0.125;
-
-        collision_object.primitives.push_back(primitive);
-        collision_object.primitive_poses.push_back(box_pose);
-        collision_object.operation = collision_object.ADD;
-
-        cylinder_object_publisher.publish(collision_object);
+        //pub_com.publish(pub_com_msg);
+        //pub_dirvec.publish(pub_dirvec_msg);
 
 //        pcl::PCDWriter writer;
 //        writer.write ("src/p26_master/p26_cylinder_segmentation/pointclouds/cylinder_filtered.pcd", *cloud_cylinder, false);
 //        writer.write ("src/p26_master/p26_cylinder_segmentation/pointclouds/cloud_merged.pcd", *cloud_merged, false);
 
-        findCylinder = false;
-//        ros::shutdown();
-      }
 
-      cloud_merged->header.frame_id = "world";
-      pub.publish(*cloud_merged);
-      cloud_merged->clear();
-    }
-    else if(findCylinder == false){
-      cloud_merged->clear();
-      counter = 0;
+                //For testing
+        nrOfSamples++;
+        std::cerr << "#";
+        double xce = point_com_avg.x - correctcom.x;
+        double yce = point_com_avg.y - correctcom.y;
+        double zce = point_com_avg.z - correctcom.z;
+        double xde = dirvec_avg.x-correctdirvec.x;
+        double yde = dirvec_avg.y-correctdirvec.y;
+        double zde = std::abs(dirvec_avg.z)-std::abs(correctdirvec.z);
+        double error_com = sqrt(xce*xce + yce*yce + zce*zce);
+        double error_dirvec = sqrt(xde*xde + yde*yde + zde*zde);
+        avg_com_error = (avg_com_error*(nrOfSamples-1)+sqrt(xce*xce + yce*yce + zce*zce))/nrOfSamples;
+        avg_dirvec_error = (avg_dirvec_error*(nrOfSamples-1)+sqrt(xde*xde + yde*yde + zde*zde))/nrOfSamples;
+
+        if (nrOfIterations != 100)
+        {
+          std::string filename = "result";
+          filename += std::to_string(nrOfIterations);
+          filename += ".txt";
+          std::ofstream myfile;
+          myfile.open(filename, std::ios_base::app);
+          if (myfile.is_open()){
+            myfile << point_com_avg.x << ", " << point_com_avg.y << ", " << point_com_avg.z << ", " << dirvec_avg.x << ", " << dirvec_avg.y << ", " << dirvec_avg.z << "\n";
+          }
+        }
+
+        if (nrOfIterations == 10000){
+          nrOfIterations = 1;
+          maxNrOfSamples = 100;
+          correctcom.x = point_com_avg.x;
+          correctcom.y = point_com_avg.y;
+          correctcom.z = point_com_avg.z;
+          correctdirvec.x = dirvec_avg.x;
+          correctdirvec.y = dirvec_avg.y;
+          correctdirvec.z = dirvec_avg.z;
+          std::cerr << std::endl << "Direction vector: [ " << dirvec_avg.x << ", " << dirvec_avg.y << ", " << dirvec_avg.z << " ]" << std::endl;
+          std::cerr << std::endl << "Centre of mass:   [ " << point_com_avg.x << ", " << point_com_avg.y << ", " << point_com_avg.z << " ]" << std::endl << std::endl;
+          nrOfSamples = 0;
+          avg_com_error = 0.0;
+          avg_dirvec_error = 0.0;
+        }
+
+
+        point_com_avg.x = 0.0;
+        point_com_avg.y = 0.0;
+        point_com_avg.z = 0.0;
+        dirvec_avg.x = 0.0;
+        dirvec_avg.y = 0.0;
+        dirvec_avg.z = 0.0;
+        iterations = 0;
+
+
+//        std::cerr << "com: " << xce << ", "<< yce << ", "<< zce << ", dir: " << xde << ", "<< yde << ", "<< zde << std::endl;
+        if(nrOfSamples >=maxNrOfSamples){
+            std::cerr << std::endl;
+            std::cerr << nrOfIterations << ", " << avg_com_error << std::endl;
+            std::cerr << nrOfIterations << ", " << avg_dirvec_error << std::endl;
+            std::cerr << std::endl;
+            nrOfSamples = 0;
+            avg_com_error = 0.0;
+            avg_dirvec_error = 0.0;
+            nrOfIterations++;
+            if(nrOfIterations>50){
+              ros::shutdown();
+            }
+        }
+
+
+
+
+
+      }
+        cloud_merged->clear();
     }
 
   }
@@ -258,15 +318,9 @@ int main(int argc, char** argv)
 
 void callback(const sensor_msgs::PointCloud2ConstPtr& input)
 {
-//  cloud_merged->clear();
   pcl::PointCloud<PointT> cloud;
   pcl::fromROSMsg (*input, cloud);//cloud is the output
   *cloud_merged += cloud;
   counter++;
 }
 
-
-void callback_find_cylinder(const std_msgs::String::ConstPtr& data)
-{
-  findCylinder = true;
-}

@@ -256,7 +256,7 @@ class MoveGroupPickAndPlace(object):
     angle_P=asin(U[2])
     angle_B = atan2( np.dot(W0,D) / vec_length(W0), np.dot(U0,D) / vec_length(U0) )
 
-    q = euler_to_quaternion( -angle_B, angle_P, np.pi+angle_H )
+    q = euler_to_quaternion( -angle_B+np.pi/4, angle_P, np.pi+angle_H )
     q = normalize(q)
 
     #q = euler_to_quaternion(0, np.pi/2, np.pi) # Straight down
@@ -392,6 +392,7 @@ def callback_CollisionObject(CollisionObject):
 def gripper_pos(data):
     global gripper_position
     gripper_position = data.data
+    rospy.loginfo("Received gripper position: %i", gripper_position)
 
 def wait_for_gripper():
     rospy.wait_for_message("gripper/position", Int64, timeout=None)
@@ -422,6 +423,16 @@ def main():
 
     while not rospy.is_shutdown():
 
+        # Open gripper
+        actuation = 1;
+        pub.publish(actuation)
+        #wait_for_gripper()
+        while gripper_position != 1:
+            pub.publish(actuation)
+            rospy.sleep(1)
+            if gripper_position == actuation:
+                break
+
         print "============ Press `Enter` to execute a movement using a joint state goal ..."
         raw_input()
 
@@ -435,23 +446,13 @@ def main():
         rospy.wait_for_message("octomap_created", String, timeout=None)
         rospy.sleep(1)
 
-        tutorial.go_to_pose_goal(cylinder_com.x, cylinder_com.y, cylinder_com.z, cylinder_dirvec.x, cylinder_dirvec.y, cylinder_dirvec.z, 0.25)
+        tutorial.go_to_pose_goal(cylinder_com.x, cylinder_com.y, cylinder_com.z, cylinder_dirvec.x, cylinder_dirvec.y, cylinder_dirvec.z, 0.18)
 
-        # Open gripper
-        actuation = 1;
-        pub.publish(actuation)
-
-        # Waiting for completion from gripper
-#        gripper_position = 0
-
-        wait_for_gripper()
-        while gripper_position != 1:
-            wait_for_gripper()
 
         if gripper_position == 1:
             # Move to gripping position
             rospy.loginfo("Moving robot to target 3")
-            tutorial.go_to_pose_goal(cylinder_com.x, cylinder_com.y, cylinder_com.z, cylinder_dirvec.x, cylinder_dirvec.y, cylinder_dirvec.z, 0.14)
+#            tutorial.go_to_pose_goal(cylinder_com.x, cylinder_com.y, cylinder_com.z, cylinder_dirvec.x, cylinder_dirvec.y, cylinder_dirvec.z, 0.14)
 
             #Close gripper
             actuation = 2
@@ -475,11 +476,23 @@ def main():
         rospy.wait_for_message("octomap_created", String, timeout=None)
         rospy.sleep(1)
 
-        tutorial.go_to_pose_goal(5.42, 9.23-0.13, 0.86, 0, 0, 1, 0)
+        tutorial.go_to_pose_goal(cylinder_com.x, cylinder_com.y, cylinder_com.z+0.2, cylinder_dirvec.x, cylinder_dirvec.y, cylinder_dirvec.z, 0.18)
 
-        print( "============ Press `ENTER` to kill")
+        tutorial.go_to_pose_goal(5.42, 9.23-0.13, 0.86+0.05, 0, 0, 1, 0)
+
+        print( "============ Press `ENTER` to release cylinder")
         raw_input()
+
+        #Open gripper
+        actuation = 1
+        pub.publish(actuation)
+        wait_for_gripper()
+
         tutorial.group.detach_object('cylinder')
+
+        print( "============ Press `ENTER` when the cylinder is repositioned")
+        raw_input()
+
         pub_find_cylinder.publish("1");
 
         # Wait for the cylinder segmentation to complete.

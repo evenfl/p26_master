@@ -14,6 +14,7 @@ void callback(const sensor_msgs::PointCloud2ConstPtr& input);
 void callback_create_octomap(const std_msgs::String::ConstPtr& msg);
 int counter = 0;
 bool createOctomap = false;
+//bool createOctomap = true;
 
 int main(int argc, char** argv)
 {
@@ -50,6 +51,7 @@ int main(int argc, char** argv)
     {
       cloud_merged->header.frame_id = "world";
 
+
       // Create the filtering object
       pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
       sor.setInputCloud (cloud_merged);
@@ -57,11 +59,16 @@ int main(int argc, char** argv)
       sor.setStddevMulThresh (0.25);
       sor.filter (*cloud_filtered);
 
-      ros::service::waitForService("p26_lefty/clear_octomap");  //this is optional
+
+//      pcl::PCDWriter writer;
+//      writer.write ("cloud_unfiltered.pcd", *cloud_merged, false);
+//      writer.write ("cloud_filtered_sor.pcd", *cloud_filtered, false);
+
+
+      //ros::service::waitForService("p26_lefty/clear_octomap");  //this is optional
       ros::ServiceClient clearClient = nh.serviceClient<std_srvs::Empty>("p26_lefty/clear_octomap");
       std_srvs::Empty srv;
       clearClient.call(srv);
-
       pub.publish(*cloud_filtered);
 
 //      std::cerr << cloud_merged->size() << std::endl;

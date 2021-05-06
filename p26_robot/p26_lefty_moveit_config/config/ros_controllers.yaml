@@ -23,14 +23,14 @@ joint_state_controller:
   type: joint_state_controller/JointStateController
   publish_rate: 50
 controller_list:
-  - name: ""
-    action_ns: p26_lefty/joint_trajectory_action
-    type: FollowJointTrajectory
-    joints:
-      - lefty_joint_carriage
-      - lefty_joint_1
-      - lefty_joint_2
-      - lefty_joint_3
-      - lefty_joint_4
-      - lefty_joint_5
-      - lefty_joint_6
+- name: ""
+  action_ns: p26_lefty/joint_trajectory_action
+  type: FollowJointTrajectory
+  joints:
+    - lefty_joint_carriage
+    - lefty_joint_1
+    - lefty_joint_2
+    - lefty_joint_3
+    - lefty_joint_4
+    - lefty_joint_5
+    - lefty_joint_6

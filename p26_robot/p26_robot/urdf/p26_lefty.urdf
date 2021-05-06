@@ -364,9 +364,6 @@
     <child link="lefty_base_link"/>
     <origin rpy="0 0 0" xyz="0 0 0"/>
   </joint>
-  --&gt;
-
-  
   <!-- Conversion were obtained from http://www.e-paint.co.uk/Lab_values.asp
        unless otherwise stated. -->
   <!-- link list -->
@@ -633,18 +630,20 @@
   <!--Tool-->
   <link name="lefty_tool">
     <visual>
-      <origin rpy="0 -1.57079632 0" xyz="0.03 -0.0625 -0.1"/>
+      <origin rpy="0.785398 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://p26_robot/meshes/tool0/visual/tool0.STL" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://p26_robot/meshes/tool0/visual/manipulator.STL"/>
       </geometry>
       <material name="">
         <color rgba="0.9254902 0.9254902 0.9058824 1"/>
       </material>
     </visual>
     <collision>
-      <origin rpy="0 -1.57079632 0" xyz="0.03 -0.0625 -0.1"/>
+      <!--    <origin xyz="0 0 0" rpy="1.5707963 -2.3561943 1.5707963"/>-->
+      <origin rpy="0.785398 0 0" xyz="0 0 0"/>
+      <!--0.785398 -1.5707963 3.14159265"/> 2.3561943-->
       <geometry>
-        <mesh filename="package://p26_robot/meshes/tool0/collision/tool0.STL" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://p26_robot/meshes/tool0/collision/manipulator_collision.STL"/>
       </geometry>
       <material name="">
         <color rgba="0.9254902 0.9254902 0.9058824 1"/>

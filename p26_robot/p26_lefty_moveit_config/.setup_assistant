@@ -2,10 +2,10 @@ moveit_setup_assistant_config:
   URDF:
     package: p26_robot
     relative_path: urdf/p26_lefty.urdf
-    xacro_args: --inorder robot_name:=p26_lefty
+    xacro_args: ""
   SRDF:
     relative_path: config/p26_lefty.srdf
   CONFIG:
     author_name: p26
-    author_email: sindb16@uia.no
-    generated_timestamp: 1614326503
+    author_email: evenfl15@uia.no
+    generated_timestamp: 1619701473

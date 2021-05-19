@@ -78,14 +78,9 @@ include_directories(SYSTEM ${THIS_PACKAGE_INCLUDE_DIRS} ${Boost_INCLUDE_DIR} ${E
 include_directories(${catkin_INCLUDE_DIRS})
 link_directories(${catkin_LIBRARY_DIRS})
 
-add_executable(collision_map src/main.cpp)
+add_executable(obstacle_detection src/main.cpp)
 
-target_link_libraries (collision_map ${catkin_LIBRARIES})
-
-
-add_executable(merge_clouds src/merge_clouds.cpp)
-
-target_link_libraries (merge_clouds ${catkin_LIBRARIES})
+target_link_libraries (obstacle_detection ${catkin_LIBRARIES})
 
 #add_executable(main_cpp src/main.cpp)
 

@@ -17,6 +17,7 @@
 #include <fstream> //For saving to text file
 #include <ros/ros.h>
 #include "std_msgs/String.h"
+#include "std_msgs/Bool.h"
 #include <sstream>
 #include <pcl_conversions/pcl_conversions.h>
 #include <sensor_msgs/PointCloud.h>
@@ -30,12 +31,10 @@
 typedef pcl::PointXYZ PointT;
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
 
-
 //const double cylinderDiameter = 0.169; // Yellow pipe in lab
-const double cylinderDiameter = 0.26;
-//const double cylinderDiameter = 0.16;
-const double cylinderRadius = cylinderDiameter/2;
 //const double cylinderLength = 0.53; // Yellow pipe in lab
+const double cylinderDiameter = 0.26;
+const double cylinderRadius = cylinderDiameter/2;
 const double cylinderLength = 1.2;
 
 const float x_min = 4.2;

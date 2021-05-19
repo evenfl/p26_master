@@ -1,3 +1,4 @@
+
 #include "main.h"
 #include "segment.h"
 #include "addCylinder.h"
@@ -40,7 +41,7 @@ int main(int argc, char** argv)
 
 
   //For testing results
-  nrOfIterations = 10000;
+  nrOfIterations = 9;
   int nrOfSamples = 0;
   PointT correctcom;
   correctcom.x = 5.2751022105+0.022;
@@ -141,7 +142,8 @@ int main(int argc, char** argv)
 
       while (point.x >= x_min && point.x <= x_max && point.y >= y_min &&  point.y <= y_max && point.z >= z_min && point.z <= z_max)
       {
-        cloud_cylinder_tmp = passThroughFilterSphere(cloud_cylinder, point, cylinderLength/2, false);
+//        cloud_cylinder_tmp = passThroughFilterSphere(cloud_cylinder, point, cylinderLength/2, false);
+        cloud_cylinder_tmp = passThroughFilterSphere(cloud_cylinder, point, sqrt((cylinderLength/2)*(cylinderLength/2)+cylinderRadius*cylinderRadius), false);
         if (cloud_cylinder_tmp->size () > biggestCloudSize)
         {
           biggestCloudSize = cloud_cylinder_tmp->size ();
@@ -265,7 +267,7 @@ int main(int argc, char** argv)
         if (nrOfIterations == 10000){
 
           nrOfIterations = 1;
-          maxNrOfSamples = 100;
+          maxNrOfSamples = 1000;
           correctcom.x = point_com_avg.x;
           correctcom.y = point_com_avg.y;
           correctcom.z = point_com_avg.z;

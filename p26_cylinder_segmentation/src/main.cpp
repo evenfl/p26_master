@@ -8,7 +8,7 @@ PointCloud::Ptr cloud_merged (new PointCloud);
 PointCloud::Ptr cloud_cylinder (new PointCloud);
 PointCloud::Ptr cloud_cylinder_tmp (new PointCloud);
 void callback(const sensor_msgs::PointCloud2ConstPtr& input);
-void callback_find_cylinder(const std_msgs::String::ConstPtr& data);
+void callback_find_cylinder(const std_msgs::Bool::ConstPtr& data);
 int counter = 0;
 bool findCylinder = true;
 
@@ -17,7 +17,7 @@ AddCylinderParams cylinder_params;
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "sub_pcl");
+  ros::init(argc, argv, "cylinder_segmentation");
   ros::NodeHandle nh;
   ros::Subscriber sub1 = nh.subscribe ("/master/jetson1/kinect_decomp", 1, callback);
   ros::Subscriber sub2 = nh.subscribe ("/master/jetson2/kinect_decomp", 1, callback);
@@ -26,7 +26,7 @@ int main(int argc, char** argv)
   ros::Subscriber sub5 = nh.subscribe ("/master/jetson5/kinect_decomp", 1, callback);
   ros::Subscriber sub6 = nh.subscribe ("/master/jetson6/kinect_decomp", 1, callback);
   ros::Subscriber sub_find_cylinder = nh.subscribe ("/p26_lefty/find_cylinder", 1, callback_find_cylinder);
-//  ros::Subscriber sub6 = nh.subscribe ("/master/merged_point_cloud", 1, callback);
+//  ros::Subscriber sub6 = nh.subscribe ("/master/merged_point_cloud", 1, callback); // merged point cloud (Lower frame rate)
   ros::Publisher pub = nh.advertise<PointCloud> ("cloud_cylinder", 1);
   ros::Publisher cylinder_object_publisher = nh.advertise<moveit_msgs::CollisionObject>("collision_object", 1);
   ros::Publisher pub_com = nh.advertise<geometry_msgs::Point> ("cylinder_com", 1);
@@ -39,7 +39,6 @@ int main(int argc, char** argv)
   PointT point_com_avg;
   PointT dirvec_avg;
   const int nrOfIterations = 20;
-//  const int nrOfIterations = 2;
   const float deviance = 0.06; // For 26 cm cylinder
 //  const float deviance = 0.1; // For 16 cm cylinder
 
@@ -50,7 +49,6 @@ int main(int argc, char** argv)
   std::cerr << "0%";
   for (int i = 0; i < nrOfIterations-6; i++){std::cerr << " ";};
   std::cerr << "100%" << std::endl;
-
 
 
   while (ros::ok())
@@ -65,6 +63,7 @@ int main(int argc, char** argv)
       pcl::ModelCoefficients::Ptr coefficients_cylinder (new pcl::ModelCoefficients);
       cloud_cylinder = segment(cloud_merged, coefficients_cylinder);
 
+      // BEGIN SPHERE FILTER
       PointT point;
       point.x = coefficients_cylinder->values[0];
       point.y = coefficients_cylinder->values[1];
@@ -122,7 +121,8 @@ int main(int argc, char** argv)
 
       while (point.x >= x_min && point.x <= x_max && point.y >= y_min &&  point.y <= y_max && point.z >= z_min && point.z <= z_max)
       {
-        cloud_cylinder_tmp = passThroughFilterSphere(cloud_cylinder, point, cylinderLength/2, false);
+//        cloud_cylinder_tmp = passThroughFilterSphere(cloud_cylinder, point, cylinderLength/2, false);
+        cloud_cylinder_tmp = passThroughFilterSphere(cloud_cylinder, point, sqrt((cylinderLength/2)*(cylinderLength/2)+cylinderRadius*cylinderRadius), false);
         if (cloud_cylinder_tmp->size () > biggestCloudSize)
         {
           biggestCloudSize = cloud_cylinder_tmp->size ();
@@ -135,6 +135,8 @@ int main(int argc, char** argv)
 
 
       cloud_cylinder = passThroughFilterSphere(cloud_cylinder, point_com, sqrt((cylinderLength/2)*(cylinderLength/2)+cylinderRadius*cylinderRadius), false);
+
+      // END SPHERE FILTER
 
       counter = 0;
 
@@ -234,6 +236,7 @@ int main(int argc, char** argv)
 
         cylinder_object_publisher.publish(collision_object);
 
+        // Write pointcloud to pcd files
 //        pcl::PCDWriter writer;
 //        writer.write ("src/p26_master/p26_cylinder_segmentation/pointclouds/cylinder_filtered.pcd", *cloud_cylinder, false);
 //        writer.write ("src/p26_master/p26_cylinder_segmentation/pointclouds/cloud_merged.pcd", *cloud_merged, false);
@@ -258,7 +261,6 @@ int main(int argc, char** argv)
 
 void callback(const sensor_msgs::PointCloud2ConstPtr& input)
 {
-//  cloud_merged->clear();
   pcl::PointCloud<PointT> cloud;
   pcl::fromROSMsg (*input, cloud);//cloud is the output
   *cloud_merged += cloud;
@@ -266,7 +268,7 @@ void callback(const sensor_msgs::PointCloud2ConstPtr& input)
 }
 
 
-void callback_find_cylinder(const std_msgs::String::ConstPtr& data)
+void callback_find_cylinder(const std_msgs::Bool::ConstPtr& data)
 {
   findCylinder = true;
 }

@@ -18,6 +18,7 @@
 #include <fstream> //For saving to text file
 #include <ros/ros.h>
 #include "std_msgs/String.h"
+#include "std_msgs/Bool.h"
 #include <sstream>
 #include <pcl_conversions/pcl_conversions.h>
 #include <sensor_msgs/PointCloud.h>

@@ -10,7 +10,4 @@
 
 #include <moveit/kinematic_constraints/utils.h>
 
-//moveit_msgs::PlanningScene addCylinder(const AddCylinderParams cylinder_params);
 moveit_msgs::CollisionObject addCylinder(const AddCylinderParams cylinder_params);
-
-//moveit::planning_interface::PlanningSceneInterface addCylinder(const AddCylinderParams cylinder_params);

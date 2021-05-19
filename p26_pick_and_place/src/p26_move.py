@@ -50,9 +50,11 @@ import moveit_commander
 import moveit_msgs.msg
 import geometry_msgs.msg
 from math import pi, atan2, cos, sin, sqrt, asin
-from std_msgs.msg import String, Int64, Float32
+from std_msgs.msg import String, Int64, Float32, Int8, UInt8, Bool
 from moveit_commander.conversions import pose_to_list
 import numpy as np
+from sensor_msgs.msg import PointCloud2
+
 #from moveit_python import PlanningSceneInterface
 ## END_SUB_TUTORIAL
 
@@ -124,26 +126,20 @@ class MoveGroupPickAndPlace(object):
   def __init__(self):
     super(MoveGroupPickAndPlace, self).__init__()
 
-    ## BEGIN_SUB_TUTORIAL setup
-    ##
-    ## First initialize `moveit_commander`_ and a `rospy`_ node:
+    # First initialize `moveit_commander`_ and a `rospy`_ node:
     moveit_commander.roscpp_initialize(sys.argv)
-    #rospy.init_node('move_group_python_interface_tutorial',
-    #                anonymous=True)
 
-    ## Instantiate a `RobotCommander`_ object. This object is the outer-level interface to
-    ## the robot:
+    # Instantiate a `RobotCommander`_ object. This object is the outer-level interface to
+    # the robot:
     robot = moveit_commander.RobotCommander()
 
-    ## Instantiate a `PlanningSceneInterface`_ object.  This object is an interface
-    ## to the world surrounding the robot:
+    # Instantiate a `PlanningSceneInterface`_ object.  This object is an interface
+    # to the world surrounding the robot:
     scene = moveit_commander.PlanningSceneInterface()
 
-    ## Instantiate a `MoveGroupCommander`_ object.  This object is an interface
-    ## to one group of joints.  In this case the group is the joints in the Panda
-    ## arm so we set ``group_name = panda_arm``. If you are using a different robot,
-    ## you should change this value to the name of your robot arm planning group.
-    ## This interface can be used to plan and execute motions on the Panda:
+    # Instantiate a `MoveGroupCommander`_ object.  This object is an interface
+    # to one group of joints.
+    # This interface can be used to plan and execute motions on the robot:
     group_name = "p26_lefty_tcp"
     group = moveit_commander.MoveGroupCommander(group_name)#,robot_description='/p26_lefty/robot_description', ns='/p26_lefty')
 
@@ -153,12 +149,8 @@ class MoveGroupPickAndPlace(object):
                                                    moveit_msgs.msg.DisplayTrajectory,
                                                    queue_size=20)
 
-    ## END_SUB_TUTORIAL
-
-    ## BEGIN_SUB_TUTORIAL basic_info
-    ##
-    ## Getting Basic Information
-    ## ^^^^^^^^^^^^^^^^^^^^^^^^^
+    # Getting Basic Information
+    # ^^^^^^^^^^^^^^^^^^^^^^^^^
     # We can get the name of the reference frame for this robot:
     planning_frame = group.get_planning_frame()
     print "============ Reference frame: %s" % planning_frame
@@ -173,9 +165,9 @@ class MoveGroupPickAndPlace(object):
 
     # Sometimes for debugging it is useful to print the entire state of the
     # robot:
-    print "============ Printing robot state"
-    print robot.get_current_state()
-    print ""
+    #print "============ Printing robot state"
+    #print robot.get_current_state()
+    #print ""
     ## END_SUB_TUTORIAL
 
     # Misc variables
@@ -188,14 +180,6 @@ class MoveGroupPickAndPlace(object):
     self.eef_link = eef_link
     self.group_names = group_names
 
-    # Initialize the move group for the arm
-#    ur5_arm = moveit_commander.MoveGroupCommander("ur5_arm")
-    # Get the name of the end-effector link
-#    end_effector_link = ur5_arm.get_end_effector_link()
-    # Set the reference frame for pose targets
-#     reference_frame = "/base_link"
-    # Set the arm reference frame accordingly
-#    ur5_arm.set_pose_reference_frame(reference_frame)
     # Allow replanning to increase the odds of a solution
     group.allow_replanning(True)
     # Allow some leeway in position (meters) and orientation (radians)
@@ -203,18 +187,10 @@ class MoveGroupPickAndPlace(object):
     group.set_goal_orientation_tolerance(0.05)
 
   def go_to_joint_state(self):
-    # Copy class variables to local variables to make the web tutorials more clear.
-    # In practice, you should use the class variables directly unless you have a good
-    # reason not to.
     group = self.group
 
-    ## BEGIN_SUB_TUTORIAL plan_to_joint_state
-    ##
     ## Planning to a Joint Goal
     ## ^^^^^^^^^^^^^^^^^^^^^^^^
-    ## The Panda's zero configuration is at a `singularity <https://www.quora.com/Robotics-What-is-meant-by-kinematic-singularity>`_ so the first
-    ## thing we want to do is move it to a slightly better configuration.
-    # We can get the joint values from the group and adjust some of the values:
     joint_goal = group.get_current_joint_values()
     print "moving from "
     print joint_goal
@@ -228,7 +204,6 @@ class MoveGroupPickAndPlace(object):
     print "moving to "
     print joint_goal
 
-
     # The go command can be called with joint values, poses, or without any
     # parameters if you have already set the pose or joint target for the group
     group.go(joint_goal, wait=True)
@@ -236,18 +211,13 @@ class MoveGroupPickAndPlace(object):
     # Calling ``stop()`` ensures that there is no residual movement
     group.stop()
 
-    ## END_SUB_TUTORIAL
-
     # For testing:
     # Note that since this section of code will not be included in the tutorials
     # we use the class variable rather than the copied state variable
     current_joints = self.group.get_current_joint_values()
     return all_close(joint_goal, current_joints, 0.01)
 
-  def go_to_pose_goal(self, x, y, z, xd, yd, zd):
-    # Copy class variables to local variables to make the web tutorials more clear.
-    # In practice, you should use the class variables directly unless you have a good
-    # reason not to.
+  def go_to_pose_goal(self, x, y, z, xd, yd, zd, distance):
     group = self.group
 
     ## Planning to a Pose Goal
@@ -285,12 +255,8 @@ class MoveGroupPickAndPlace(object):
     angle_H=atan2(U[1],U[0])
     angle_P=asin(U[2])
     angle_B = atan2( np.dot(W0,D) / vec_length(W0), np.dot(U0,D) / vec_length(U0) )
-    print(angle_B)
-    print(angle_P)
-    print(angle_H)
 
-
-    q = euler_to_quaternion( -angle_B, angle_P, np.pi+angle_H )
+    q = euler_to_quaternion( -angle_B+np.pi/4, angle_P, np.pi+angle_H )
     q = normalize(q)
 
     #q = euler_to_quaternion(0, np.pi/2, np.pi) # Straight down
@@ -299,28 +265,25 @@ class MoveGroupPickAndPlace(object):
     #q = euler_to_quaternion(0, 0, 0) # Straight backwards
 
     pose_goal = geometry_msgs.msg.Pose()
-    #q_length = vec_length(q)
-    print(q)
     pose_goal.orientation.x = q[0]
     pose_goal.orientation.y = q[1]
     pose_goal.orientation.z = q[2]
     pose_goal.orientation.w = q[3]
 
-    pose_goal.position.x = x+0.14*U[0]
-    pose_goal.position.y = y+0.14*U[1]
-    pose_goal.position.z = z+0.14*U[2]
+    pose_goal.position.x = x+distance*U[0]
+    pose_goal.position.y = y+distance*U[1]
+    pose_goal.position.z = z+distance*U[2]
     state = self.robot.get_current_state()
     group.set_start_state(state)
     group.set_pose_target(pose_goal)
 
     ## Now, we call the planner to compute the plan and execute it.
-#    plan = group.go(wait=True)
-
-    plan = group.plan()
-    if plan.joint_trajectory.points:  # True if trajectory contains points
-      move_success = group.execute(plan)
-    else:
-      rospy.logerr("Trajectory is empty. Planning was unsuccessful.")
+    plan = group.go(wait=True)
+#    plan = move_group.plan()
+#    if plan.joint_trajectory.points:  # True if trajectory contains points
+#      move_success = move_group.execute(plan)
+#    else:
+#      rospy.logerr("Trajectory is empty. Planning was unsuccessful.")
 
     # Calling `stop()` ensures that there is no residual movement
     group.stop()
@@ -405,6 +368,7 @@ class MoveGroupPickAndPlace(object):
     return self.wait_for_state_update(box_is_known=True, timeout=timeout)
 
 
+
 cylinder_com = geometry_msgs.msg.Point()
 cylinder_dirvec = geometry_msgs.msg.Point()
 cylinder = moveit_msgs.msg.CollisionObject()
@@ -424,97 +388,118 @@ def callback_CollisionObject(CollisionObject):
     global cylinder
     cylinder = CollisionObject
 
+gripper_position = 0
+
+def gripper_pos(data):
+    global gripper_position
+    gripper_position = data.data
+    rospy.loginfo("Received gripper position: %i", gripper_position)
+
+def wait_for_gripper():
+    rospy.wait_for_message("gripper/position", UInt8, timeout=None)
 
 def main():
   try:
-    # In ROS, nodes are uniquely named. If two nodes with the same
-    # name are launched, the previous one is kicked off. The
-    # anonymous=True flag means that rospy will choose a unique
+    # The anonymous=True flag means that rospy will choose a unique
     # name for our 'listener' node so that multiple listeners can
     # run simultaneously.
-    rospy.init_node('move_group_python_interface_tutorial', anonymous=True)
+    rospy.init_node('pick_and_place', anonymous=True)
 
+    pub = rospy.Publisher('gripper/actuation', UInt8, queue_size=10)
+    pub_find_cylinder = rospy.Publisher('find_cylinder', Bool, queue_size=10)
+    pub_create_octomap = rospy.Publisher('create_octomap', Bool, queue_size=10)
+#    rospy.Subscriber("octomap_created", String, gripper_pos)
+    rospy.Subscriber("gripper/position", UInt8, gripper_pos)
     rospy.Subscriber("cylinder_com", geometry_msgs.msg.Point, callback_com)
     rospy.Subscriber("cylinder_dirvec", geometry_msgs.msg.Point, callback_dirvec)
 
-    #print "============ Press `Enter` to begin the Pick And Place sequence by setting up the moveit_commander (press ctrl-d to exit) ..."
-    #raw_input()
-
+    # Wait for the cylinder segmentation to complete.
     rospy.wait_for_message("cylinder_dirvec", geometry_msgs.msg.Point, timeout=None)
-
+    rospy.sleep(1)
     tutorial = MoveGroupPickAndPlace()
-#    tutorial.add_box(5.42, 9.23, 0.125, 0.3, 0.4, 0.25)
 
-    print "============ Press `Enter` to execute a movement using a joint state goal ..."
-    raw_input()
+    pub_create_octomap.publish(1)
+    rospy.wait_for_message("octomap_created", Bool, timeout=None)
 
-    #tutorial.go_to_pose_goal(cylinder_com.x+0.16, cylinder_com.y, cylinder_com.z)
+    while not rospy.is_shutdown():
 
-    tutorial.go_to_pose_goal(cylinder_com.x, cylinder_com.y, cylinder_com.z, cylinder_dirvec.x, cylinder_dirvec.y, cylinder_dirvec.z)
+        # Open gripper
+        actuation = 1;
+        pub.publish(actuation)
+        #wait_for_gripper()
+        while gripper_position != 1:
+            break
+            pub.publish(actuation)
+            rospy.sleep(1)
+            if gripper_position == actuation:
+                break
 
-    tutorial.group.attach_object('cylinder')
+        print "============ Press `Enter` to execute a movement using a joint state goal ..."
+        raw_input()
 
-    print "============ Press `Enter` when the cylinder is physically attatched..."
-    raw_input()
+#        pub_find_cylinder.publish(1);
+
+        # Wait for the cylinder segmentation to complete.
+#        rospy.wait_for_message("cylinder_dirvec", geometry_msgs.msg.Point, timeout=None)
+
+        #tutorial.go_to_pose_goal(cylinder_com.x+0.16, cylinder_com.y, cylinder_com.z)
+        pub_create_octomap.publish(1)
+        rospy.wait_for_message("octomap_created", Bool, timeout=None)
+        rospy.sleep(1)
+
+        tutorial.go_to_pose_goal(cylinder_com.x, cylinder_com.y, cylinder_com.z, cylinder_dirvec.x, cylinder_dirvec.y, cylinder_dirvec.z, 0.20)
+
+
+        if gripper_position == 1:
+            # Move to gripping position
+            rospy.loginfo("Moving robot to target 3")
+#            tutorial.go_to_pose_goal(cylinder_com.x, cylinder_com.y, cylinder_com.z, cylinder_dirvec.x, cylinder_dirvec.y, cylinder_dirvec.z, 0.14)
+
+            #Close gripper
+            actuation = 2
+            pub.publish(actuation)
+
+        else:
+            # Gripper malfunction
+            rospy.loginfo("Gripper malfunction")
+
+        # Waiting for completion from gripper
+        wait_for_gripper()
+
+        if gripper_position == 2:
+            rospy.loginfo("Cylinder attatched")
+
+        tutorial.group.attach_object('cylinder')
+
+        print "============ Press `Enter` when the cylinder is physically attatched..."
+        raw_input()
+        pub_create_octomap.publish(1)
+        rospy.wait_for_message("octomap_created", Bool, timeout=None)
+        rospy.sleep(1)
+
+        tutorial.go_to_pose_goal(cylinder_com.x, cylinder_com.y, cylinder_com.z+0.2, cylinder_dirvec.x, cylinder_dirvec.y, cylinder_dirvec.z, 0.18)
+
+        tutorial.go_to_pose_goal(5.42, 9.23-0.13, 0.86+0.05, 0, 0, 1, 0)
+
+        print( "============ Press `ENTER` to release cylinder")
+        raw_input()
+
+        #Open gripper
+        actuation = 1
+        pub.publish(actuation)
+        wait_for_gripper()
+
+        tutorial.group.detach_object('cylinder')
+
+        print( "============ Press `ENTER` when the cylinder is repositioned")
+        raw_input()
+
+        pub_find_cylinder.publish(1);
+
+        # Wait for the cylinder segmentation to complete.
+        rospy.wait_for_message("cylinder_dirvec", geometry_msgs.msg.Point, timeout=None)
 
 #    tutorial.go_to_joint_state()
-
-#    tutorial.go_to_pose_goal(cylinder_com.x, cylinder_com.y, cylinder_com.z+0.1, cylinder_dirvec.x, cylinder_dirvec.y, cylinder_dirvec.z)
-    tutorial.go_to_pose_goal(5.42, 9.23, 0.86, 0, 0, 1)
-
-
-    # Create table obstacle
-#    planning_scene.removeCollisionObject('floor')
-#    planning_scene.addBox('floor', 10.0, 10.0, 0.6,
-#                          0.0, 0.0, -0.5)
-
-#    print "============ Press `Enter` to execute a movement using a pose goal ..."
-#    raw_input()
-#    rospy.spin()
-#    while not rospy.is_shutdown():
-#       rate.sleep()
-#      tutorial.go_to_pose_goal()
-#      tutorial.go_to_pose_goal2()
-#      tutorial.go_to_pose_goal3()
-#      tutorial.go_to_pose_goal2()
-
-#    print "============ Press `Enter` to plan and display a Cartesian path ..."
-#    raw_input()
-#    cartesian_plan, fraction = tutorial.plan_cartesian_path()
-
-#    print "============ Press `Enter` to display a saved trajectory (this will replay the Cartesian path)  ..."
-#    raw_input()
-#    tutorial.display_trajectory(cartesian_plan)
-
-#    print "============ Press `Enter` to execute a saved path ..."
-#    raw_input()
-#    tutorial.execute_plan(cartesian_plan)
-
-#    print "============ Press `Enter` to add a box to the planning scene ..."
-#    raw_input()
-#    tutorial.add_box()
-
-#    print "============ Press `Enter` to attach a Box to the Panda robot ..."
-#    raw_input()
-#    tutorial.attach_box()
-
-#    print "============ Press `Enter` to plan and execute a path with an attached collision object ..."
-#    raw_input()
-#    cartesian_plan, fraction = tutorial.plan_cartesian_path(scale=-1)
-#    tutorial.execute_plan(cartesian_plan)
-
-#    print "============ Press `Enter` to detach the box from the Panda robot ..."
-#    raw_input()
-#    tutorial.detach_box()
-
-#    print "============ Press `Enter` to remove the box from the planning scene ..."
-#    raw_input()
-    #tutorial.remove_box()
-    print( "============ Press `ENTER` to kill")
-    raw_input()
-    tutorial.group.detach_object('cylinder')
-
-    tutorial.go_to_joint_state()
 
     print( "============ Python tutorial demo complete!")
   except rospy.ROSInterruptException:
@@ -524,39 +509,3 @@ def main():
 
 if __name__ == '__main__':
   main()
-
-## BEGIN_TUTORIAL
-## .. _moveit_commander:
-##    http://docs.ros.org/kinetic/api/moveit_commander/html/namespacemoveit__commander.html
-##
-## .. _MoveGroupCommander:
-##    http://docs.ros.org/kinetic/api/moveit_commander/html/classmoveit__commander_1_1move__group_1_1MoveGroupCommander.html
-##
-## .. _RobotCommander:
-##    http://docs.ros.org/kinetic/api/moveit_commander/html/classmoveit__commander_1_1robot_1_1RobotCommander.html
-##
-## .. _PlanningSceneInterface:
-##    http://docs.ros.org/kinetic/api/moveit_commander/html/classmoveit__commander_1_1planning__scene__interface_1_1PlanningSceneInterface.html
-##
-## .. _DisplayTrajectory:
-##    http://docs.ros.org/kinetic/api/moveit_msgs/html/msg/DisplayTrajectory.html
-##
-## .. _RobotTrajectory:
-##    http://docs.ros.org/kinetic/api/moveit_msgs/html/msg/RobotTrajectory.html
-##
-## .. _rospy:
-##    http://docs.ros.org/kinetic/api/rospy/html/
-## CALL_SUB_TUTORIAL imports
-## CALL_SUB_TUTORIAL setup
-## CALL_SUB_TUTORIAL basic_info
-## CALL_SUB_TUTORIAL plan_to_joint_state
-## CALL_SUB_TUTORIAL plan_to_pose
-## CALL_SUB_TUTORIAL plan_cartesian_path
-## CALL_SUB_TUTORIAL display_trajectory
-## CALL_SUB_TUTORIAL execute_plan
-## CALL_SUB_TUTORIAL add_box
-## CALL_SUB_TUTORIAL wait_for_scene_update
-## CALL_SUB_TUTORIAL attach_object
-## CALL_SUB_TUTORIAL detach_object
-## CALL_SUB_TUTORIAL remove_object
-## END_TUTORIAL

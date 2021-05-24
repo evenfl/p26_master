@@ -1,0 +1,3 @@
+[submodule "p26_gripper/p26_gripper"]
+	path = p26_gripper/p26_gripper
+	url = https://github.com/sindreb/p26_gripper.git

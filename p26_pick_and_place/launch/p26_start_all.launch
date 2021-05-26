@@ -4,8 +4,8 @@
 <!--<include file="$(find wp3_launch)/start_mil.launch"/>-->
 
 <!--Launching gripper-->
-<machine name="p26_gripper" address="p26_raspberry.wp3.localnet" env-loader="/home/ubuntu/catkin_ws/devel/env.sh" user="ubuntu" password="ubuntu" default="false"/>
-<node machine="p26_gripper" name="gripper" pkg="p26_gripper" type="gripping.py" />
+<!--<machine name="p26_gripper" address="p26_raspberry.wp3.localnet" env-loader="/home/ubuntu/catkin_ws/devel/env.sh" user="ubuntu" password="ubuntu" default="false"/>-->
+<!--<node machine="p26_gripper" name="gripper" pkg="p26_gripper" type="gripping.py" />-->
 
 <!--Launching MoveIt nodes-->
 <group ns="p26_lefty">

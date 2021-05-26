@@ -643,7 +643,7 @@
       <origin rpy="0.785398 0 0" xyz="0 0 0"/>
       <!--0.785398 -1.5707963 3.14159265"/> 2.3561943-->
       <geometry>
-        <mesh filename="package://p26_robot/meshes/tool0/collision/manipulator_collision.STL"/>
+        <mesh filename="package://p26_robot/meshes/tool0/collision/manipulator_collision_50mm.STL"/>
       </geometry>
       <material name="">
         <color rgba="0.9254902 0.9254902 0.9058824 1"/>

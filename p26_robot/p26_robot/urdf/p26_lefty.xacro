@@ -29,7 +29,7 @@
 <!--    <origin xyz="0 0 0" rpy="1.5707963 -2.3561943 1.5707963"/>-->
     <origin xyz="0 0 0" rpy="0.785398 0 0"/><!--0.785398 -1.5707963 3.14159265"/> 2.3561943-->
       <geometry>
-        <mesh filename="package://p26_robot/meshes/tool0/collision/manipulator_collision.STL"/>
+        <mesh filename="package://p26_robot/meshes/tool0/collision/manipulator_collision_50mm.STL"/>
       </geometry>
       <xacro:material_abb_white />
     </collision>

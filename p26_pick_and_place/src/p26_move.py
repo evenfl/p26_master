@@ -34,8 +34,7 @@
 #
 # Author: Acorn Pooley, Mike Lautman
 
-## BEGIN_SUB_TUTORIAL imports
-##
+
 ## To use the Python MoveIt! interfaces, we will import the `moveit_commander`_ namespace.
 ## This namespace provides us with a `MoveGroupCommander`_ class, a `PlanningSceneInterface`_ class,
 ## and a `RobotCommander`_ class. (More on these below)
@@ -56,7 +55,6 @@ import numpy as np
 from sensor_msgs.msg import PointCloud2
 
 #from moveit_python import PlanningSceneInterface
-## END_SUB_TUTORIAL
 
 def euler_to_quaternion(roll, pitch, yaw):
 
@@ -168,7 +166,6 @@ class MoveGroupPickAndPlace(object):
     #print "============ Printing robot state"
     #print robot.get_current_state()
     #print ""
-    ## END_SUB_TUTORIAL
 
     # Misc variables
     self.box_name = ''
@@ -211,9 +208,6 @@ class MoveGroupPickAndPlace(object):
     # Calling ``stop()`` ensures that there is no residual movement
     group.stop()
 
-    # For testing:
-    # Note that since this section of code will not be included in the tutorials
-    # we use the class variable rather than the copied state variable
     current_joints = self.group.get_current_joint_values()
     return all_close(joint_goal, current_joints, 0.01)
 
@@ -293,20 +287,16 @@ class MoveGroupPickAndPlace(object):
 
 
     # For testing:
-    # Note that since this section of code will not be included in the tutorials
-    # we use the class variable rather than the copied state variable
     current_pose = self.group.get_current_pose().pose
     print "moving to:"
     print pose_goal
     return all_close(pose_goal, current_pose, 0.01)
   def wait_for_state_update(self, box_is_known=False, box_is_attached=False, timeout=4):
-  # Copy class variables to local variables to make the web tutorials more clear.
   # In practice, you should use the class variables directly unless you have a good
   # reason not to.
     box_name = self.box_name
     scene = self.scene
 
-## BEGIN_SUB_TUTORIAL wait_for_scene_update
 ##
 ## Ensuring Collision Updates Are Receieved
 ## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -314,9 +304,7 @@ class MoveGroupPickAndPlace(object):
 ## could get lost and the box will not appear. To ensure that the updates are
 ## made, we wait until we see the changes reflected in the
 ## ``get_known_object_names()`` and ``get_known_object_names()`` lists.
-## For the purpose of this tutorial, we call this function after adding,
-## removing, attaching or detaching an object in the planning scene. We then wait
-## until the updates have been made or ``timeout`` seconds have passed
+
     start = rospy.get_time()
     seconds = rospy.get_time()
     while (seconds - start < timeout) and not rospy.is_shutdown():
@@ -338,15 +326,13 @@ class MoveGroupPickAndPlace(object):
 
 # If we exited the while loop without returning then we timed out
     return False
-## END_SUB_TUTORIAL
+
   def add_box(self, x, y, z, l, w, h, timeout=4):
-    # Copy class variables to local variables to make the web tutorials more clear.
     # In practice, you should use the class variables directly unless you have a good
     # reason not to.
     box_name = self.box_name
     scene = self.scene
 
-    ## BEGIN_SUB_TUTORIAL add_box
     ##
     ## Adding Objects to the Planning Scene
     ## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -361,7 +347,6 @@ class MoveGroupPickAndPlace(object):
     box_name = "box"
     scene.add_box(box_name, box_pose, size=(l,w,h))
 
-    ## END_SUB_TUTORIAL
     # Copy local variables back to class variables. In practice, you should use the class
     # variables directly unless you have a good reason not to.
     #self.box_name=box_name
@@ -416,10 +401,13 @@ def main():
     # Wait for the cylinder segmentation to complete.
     rospy.wait_for_message("cylinder_dirvec", geometry_msgs.msg.Point, timeout=None)
     rospy.sleep(1)
-    tutorial = MoveGroupPickAndPlace()
+    lefty_robot = MoveGroupPickAndPlace()
 
     pub_create_octomap.publish(1)
     rospy.wait_for_message("octomap_created", Bool, timeout=None)
+
+    print "============ Press `Enter` to start the pick-and-place operation..."
+    raw_input()
 
     while not rospy.is_shutdown():
 
@@ -428,32 +416,22 @@ def main():
         pub.publish(actuation)
         #wait_for_gripper()
         while gripper_position != 1:
-            break
             pub.publish(actuation)
             rospy.sleep(1)
             if gripper_position == actuation:
                 break
 
-        print "============ Press `Enter` to execute a movement using a joint state goal ..."
-        raw_input()
-
-#        pub_find_cylinder.publish(1);
-
-        # Wait for the cylinder segmentation to complete.
-#        rospy.wait_for_message("cylinder_dirvec", geometry_msgs.msg.Point, timeout=None)
-
-        #tutorial.go_to_pose_goal(cylinder_com.x+0.16, cylinder_com.y, cylinder_com.z)
         pub_create_octomap.publish(1)
         rospy.wait_for_message("octomap_created", Bool, timeout=None)
         rospy.sleep(1)
 
-        tutorial.go_to_pose_goal(cylinder_com.x, cylinder_com.y, cylinder_com.z, cylinder_dirvec.x, cylinder_dirvec.y, cylinder_dirvec.z, 0.20)
+        lefty_robot.go_to_pose_goal(cylinder_com.x, cylinder_com.y, cylinder_com.z, cylinder_dirvec.x, cylinder_dirvec.y, cylinder_dirvec.z, 0.1925)
 
 
         if gripper_position == 1:
             # Move to gripping position
             rospy.loginfo("Moving robot to target 3")
-#            tutorial.go_to_pose_goal(cylinder_com.x, cylinder_com.y, cylinder_com.z, cylinder_dirvec.x, cylinder_dirvec.y, cylinder_dirvec.z, 0.14)
+#            lefty_robot.go_to_pose_goal(cylinder_com.x, cylinder_com.y, cylinder_com.z, cylinder_dirvec.x, cylinder_dirvec.y, cylinder_dirvec.z, 0.14)
 
             #Close gripper
             actuation = 2
@@ -469,27 +447,27 @@ def main():
         if gripper_position == 2:
             rospy.loginfo("Cylinder attatched")
 
-        tutorial.group.attach_object('cylinder')
+        lefty_robot.group.attach_object('cylinder')
 
-        print "============ Press `Enter` when the cylinder is physically attatched..."
-        raw_input()
+        #print "============ Press `Enter` when the cylinder is physically attatched..."
+        #raw_input()
         pub_create_octomap.publish(1)
         rospy.wait_for_message("octomap_created", Bool, timeout=None)
         rospy.sleep(1)
 
-        tutorial.go_to_pose_goal(cylinder_com.x, cylinder_com.y, cylinder_com.z+0.2, cylinder_dirvec.x, cylinder_dirvec.y, cylinder_dirvec.z, 0.18)
+        lefty_robot.go_to_pose_goal(cylinder_com.x, cylinder_com.y, cylinder_com.z+0.1, cylinder_dirvec.x, cylinder_dirvec.y, cylinder_dirvec.z, 0.1925)
 
-        tutorial.go_to_pose_goal(5.42, 9.23-0.13, 0.86+0.05, 0, 0, 1, 0)
+        lefty_robot.go_to_pose_goal(5.42, 9.23-0.13, 0.86+0.05, 0, 0, 1, 0)
 
-        print( "============ Press `ENTER` to release cylinder")
-        raw_input()
+        #print( "============ Press `ENTER` to release cylinder")
+        #raw_input()
 
         #Open gripper
         actuation = 1
         pub.publish(actuation)
         wait_for_gripper()
 
-        tutorial.group.detach_object('cylinder')
+        lefty_robot.group.detach_object('cylinder')
 
         print( "============ Press `ENTER` when the cylinder is repositioned")
         raw_input()
@@ -499,9 +477,9 @@ def main():
         # Wait for the cylinder segmentation to complete.
         rospy.wait_for_message("cylinder_dirvec", geometry_msgs.msg.Point, timeout=None)
 
-#    tutorial.go_to_joint_state()
+#    lefty_robot.go_to_joint_state()
 
-    print( "============ Python tutorial demo complete!")
+    print( "============ Pick-and-place operation complete!")
   except rospy.ROSInterruptException:
     return
   except KeyboardInterrupt:

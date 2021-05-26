@@ -41,7 +41,7 @@ int main(int argc, char** argv)
 
 
   //For testing results
-  nrOfIterations = 9;
+  nrOfIterations = 20;
   int nrOfSamples = 0;
   PointT correctcom;
   correctcom.x = 5.2751022105+0.022;
@@ -59,7 +59,7 @@ int main(int argc, char** argv)
   correctdirvec.z = 1;
   double avg_com_error = 0.0;
   double avg_dirvec_error = 0.0;
-  int maxNrOfSamples = 1000;
+  int maxNrOfSamples = 10000;
 
 
   const float deviance = 0.06;
@@ -254,7 +254,7 @@ int main(int argc, char** argv)
 
         if (nrOfIterations != 100)
         {
-          std::string filename = "result";
+          std::string filename = "result_validation";
           filename += std::to_string(nrOfIterations);
           filename += ".txt";
           std::ofstream myfile;
@@ -301,7 +301,7 @@ int main(int argc, char** argv)
             avg_com_error = 0.0;
             avg_dirvec_error = 0.0;
             nrOfIterations++;
-            if(nrOfIterations>50){
+            if(nrOfIterations>1){
               ros::shutdown();
             }
         }
@@ -326,3 +326,4 @@ void callback(const sensor_msgs::PointCloud2ConstPtr& input)
   *cloud_merged += cloud;
   counter++;
 }
+

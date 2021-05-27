@@ -53,7 +53,6 @@ from std_msgs.msg import String, Int64, Float32, Int8, UInt8, Bool
 from moveit_commander.conversions import pose_to_list
 import numpy as np
 from sensor_msgs.msg import PointCloud2
-
 #from moveit_python import PlanningSceneInterface
 
 def euler_to_quaternion(roll, pitch, yaw):
@@ -285,79 +284,15 @@ class MoveGroupPickAndPlace(object):
     # Note: there is no equivalent function for clear_joint_value_targets()
     group.clear_pose_targets()
 
-
     # For testing:
     current_pose = self.group.get_current_pose().pose
     print "moving to:"
     print pose_goal
     return all_close(pose_goal, current_pose, 0.01)
-  def wait_for_state_update(self, box_is_known=False, box_is_attached=False, timeout=4):
-  # In practice, you should use the class variables directly unless you have a good
-  # reason not to.
-    box_name = self.box_name
-    scene = self.scene
-
-##
-## Ensuring Collision Updates Are Receieved
-## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-## If the Python node dies before publishing a collision object update message, the message
-## could get lost and the box will not appear. To ensure that the updates are
-## made, we wait until we see the changes reflected in the
-## ``get_known_object_names()`` and ``get_known_object_names()`` lists.
-
-    start = rospy.get_time()
-    seconds = rospy.get_time()
-    while (seconds - start < timeout) and not rospy.is_shutdown():
-  # Test if the box is in attached objects
-      attached_objects = scene.get_attached_objects([box_name])
-      is_attached = len(attached_objects.keys()) > 0
-
-  # Test if the box is in the scene.
-  # Note that attaching the box will remove it from known_objects
-      is_known = box_name in scene.get_known_object_names()
-
-  # Test if we are in the expected state
-      if (box_is_attached == is_attached) and (box_is_known == is_known):
-        return True
-
-  # Sleep so that we give other threads time on the processor
-      rospy.sleep(0.1)
-      seconds = rospy.get_time()
-
-# If we exited the while loop without returning then we timed out
-    return False
-
-  def add_box(self, x, y, z, l, w, h, timeout=4):
-    # In practice, you should use the class variables directly unless you have a good
-    # reason not to.
-    box_name = self.box_name
-    scene = self.scene
-
-    ##
-    ## Adding Objects to the Planning Scene
-    ## ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    ## First, we will create a box in the planning scene at the location of the left finger:
-    box_pose = geometry_msgs.msg.PoseStamped()
-    box_pose.header.frame_id = self.robot.get_planning_frame()
-    print(self.group.get_planning_frame())
-    box_pose.pose.position.x = x
-    box_pose.pose.position.y = y
-    box_pose.pose.position.z = z
-    box_pose.pose.orientation.w = 1.0
-    box_name = "box"
-    scene.add_box(box_name, box_pose, size=(l,w,h))
-
-    # Copy local variables back to class variables. In practice, you should use the class
-    # variables directly unless you have a good reason not to.
-    #self.box_name=box_name
-    return self.wait_for_state_update(box_is_known=True, timeout=timeout)
-
-
-
+  
 cylinder_com = geometry_msgs.msg.Point()
 cylinder_dirvec = geometry_msgs.msg.Point()
 cylinder = moveit_msgs.msg.CollisionObject()
-
 
 def callback_com(data):
     global cylinder_com
@@ -426,7 +361,6 @@ def main():
         rospy.sleep(1)
 
         lefty_robot.go_to_pose_goal(cylinder_com.x, cylinder_com.y, cylinder_com.z, cylinder_dirvec.x, cylinder_dirvec.y, cylinder_dirvec.z, 0.1925)
-
 
         if gripper_position == 1:
             # Move to gripping position
